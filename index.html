@@ -37,31 +37,146 @@
         a:active {
             color: #39FF14;
         }
+
+        /* ---------- SEARCH BOX ---------- */
+
+        .search-wrap {
+            margin-top: 10px;
+            margin-bottom: 6px;
+        }
+
+        .search-wrap input[type="text"] {
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(0,0,0,0.2);
+            font-family: inherit;
+            font-size: 1em;
+            min-width: 320px;
+        }
+
+        .search-wrap button {
+            padding: 8px 10px;
+            border-radius: 10px;
+            border: 1px solid rgba(0,0,0,0.2);
+            font-family: inherit;
+            font-size: 1em;
+            color: blue;
+            background: rgba(255,255,255,0.85);
+            cursor: pointer;
+        }
+
+        /* ---------- SUBHEADINGS: lilac + pink outline + pink glow ---------- */
+
+        @keyframes pinkGlow {
+            0% {
+                text-shadow:
+                    -1px -1px 0 rgba(255,230,242,1),
+                     1px -1px 0 rgba(255,230,242,1),
+                    -1px  1px 0 rgba(255,230,242,1),
+                     1px  1px 0 rgba(255,230,242,1),
+                     0 0 12px rgba(255,105,180,0.70),
+                     0 0 22px rgba(255,105,180,0.40);
+            }
+            50% {
+                text-shadow:
+                    -1px -1px 0 rgba(255,230,242,1),
+                     1px -1px 0 rgba(255,230,242,1),
+                    -1px  1px 0 rgba(255,230,242,1),
+                     1px  1px 0 rgba(255,230,242,1),
+                     0 0 18px rgba(255,105,180,0.95),
+                     0 0 30px rgba(255,105,180,0.60);
+            }
+            100% {
+                text-shadow:
+                    -1px -1px 0 rgba(255,200,220,1),
+                     1px -1px 0 rgba(255,200,220,1),
+                    -1px  1px 0 rgba(255,200,220,1),
+                     1px  1px 0 rgba(255,200,220,1),
+                     0 0 12px rgba(255,105,180,0.70),
+                     0 0 22px rgba(255,105,180,0.40);
+            }
+        }
+
+        .subhead {
+            color: #d7b3e6;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+            font-size: 1.15em;
+            display: inline-block;
+            margin-top: 18px;
+            margin-bottom: 6px;
+            animation: pinkGlow 5.5s ease-in-out infinite;
+        }
+
+        /* ---------- ADVANCED SEARCH: green text + green glow ---------- */
+
+        @keyframes greenGlow {
+            0% {
+                text-shadow:
+                    0 0 6px rgba(57,255,20,0.55),
+                    0 0 14px rgba(57,255,20,0.30);
+            }
+            50% {
+                text-shadow:
+                    0 0 12px rgba(57,255,20,0.95),
+                    0 0 26px rgba(57,255,20,0.55);
+            }
+            100% {
+                text-shadow:
+                    0 0 6px rgba(57,255,20,0.55),
+                    0 0 14px rgba(57,255,20,0.30);
+            }
+        }
+
+        a.advanced-search:link,
+        a.advanced-search:visited,
+        a.advanced-search:active,
+        a.advanced-search:hover {
+            color: #39FF14;
+            font-style: italic;
+            font-size: 1.3em;
+            text-decoration: none;
+            animation: greenGlow 4s ease-in-out infinite;
+        }
     </style>
 </head>
+
 <body>
 
 <h1>home :)</h1>
 
-<a href="https://www.dazeddigital.com">dazed</a><br>
-<a href="https://www.spamzine.co.uk/plaza">SPAM plaza</a><br>
-<a href="https://www.lrb.co.uk/blog/">lrb blog</a><br>
 <a href="https://granta.com">granta</a><br>
-<a href="https://future-feed.net/">future feed</a><br>
+<a href="https://thebaffler.com/latest">the baffler</a><br>
+<a href="https://www.spamzine.co.uk/plaza">SPAM plaza</a><br>
 <a href="https://tank.tv/magazine">tank</a><br>
+<a href="https://draughtjournal.com">draught</a><br>
+<a href="https://www.lrb.co.uk/blog/">lrb blog</a><br>
 <a href="https://bombmagazine.org/discipline/painting">bomb (painting)</a><br>
 <a href="https://artforum.com">art forum</a><br>
+<a href="https://artreview.com">art review</a><br>
 <a href="https://brooklynrail.org">brooklyn rail</a><br>
-<a href="https://thebaffler.com/latest">the baffler</a><br>
-<a href="https://www.greyroom.org">grey room</a><br>
+<a href="https://spikeartmagazine.com">spike</a><br>
+<a href="https://www.frieze.com">frieze</a><br>
 <a href="https://www.e-flux.com/journal">e-flux</a><br>
+<a href="https://www.greyroom.org">grey room</a><br>
+<a href="https://future-feed.net/">future feed</a><br>
 <a href="https://www.ambientreceiver.org/contents">ambient receiver</a><br>
+<a href="https://emergencemagazine.org">emergence</a><br>
+<a href="https://dis.art">dis.art</a><br>
+<a href="https://interludedocs.com">interlude docs</a><br>
+
+<br>
+
+<span class="subhead">p o l i t i c s</span><br>
 <a href="https://damagemag.com">damage</a><br>
 <a href="https://newleftreview.org/sidecar">nlr sidecar</a><br>
 <a href="https://novaramedia.com/">novara</a><br>
 <a href="https://www.dissentmagazine.org/">dissent</a><br>
+<a href="https://www.thecanary.co">the canary</a><br>
+
 <br>
-p o e t r y<br>
+
+<span class="subhead">p o e t r y</span><br>
 <a href="https://www.spamzine.co.uk/">SPAM</a><br>
 <a href="https://blackboxmanifold.sites.sheffield.ac.uk/">blackbox manifold</a><br>
 <a href="https://pxxtry.com/">free trials</a><br>
@@ -74,18 +189,53 @@ p o e t r y<br>
 <a href="https://www.datableedzine.com/">datableed</a><br>
 <a href="https://www.permeablebarrier.com/lurking">permeable barrier</a><br>
 <a href="https://wonder-publishing.com/shitwonder">shitwonder</a>
-<br><br>
-l i b r a r i e s<br>
-<a href="https://writing.upenn.edu/epc/library/">electronic poetry centre</a><br>
-<a href="https://annas-archive.org/">Anna's archive</a>
+
 <br><br>
 
+<span class="subhead">l i b r a r i e s</span><br>
+<a href="https://writing.upenn.edu/epc/library/">electronic poetry centre</a><br>
+<a href="https://annas-archive.org/">anna's archive</a><br>
+<a href="https://monoskop.org/">monoskop</a>
+
+<br><br>
+
+<span class="subhead">s e a r c h</span><br>
+
+<div class="search-wrap">
+    <input id="quickTerm" type="text">
+    <button id="quickGo">search</button>
+</div>
+
+<a href="site-search.html" class="advanced-search">advanced search</a>
+
+<br><br>
 subscribe to granta, tank, baffler?
 
-<!-- NEW: site search link -->
-<br><br>
-a r c h i v e<br>
-<a href="site-search.html">search the archive</a>
+<script src="sites.js"></script>
+<script>
+    function buildSiteClause(domains) {
+        return "(" + domains.map(d => "site:" + d).join(" OR ") + ")";
+    }
+
+    function runQuickSearch() {
+        const term = (document.getElementById("quickTerm").value || "").trim();
+        if (!term) return;
+
+        const sites = (window.SITES || []);
+        if (!sites.length) {
+            window.open("https://www.google.com/search?q=" + encodeURIComponent(term), "_blank");
+            return;
+        }
+
+        const q = `${term} ${buildSiteClause(sites)}`.trim();
+        window.open("https://www.google.com/search?q=" + encodeURIComponent(q), "_blank");
+    }
+
+    document.getElementById("quickGo").addEventListener("click", runQuickSearch);
+    document.getElementById("quickTerm").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") runQuickSearch();
+    });
+</script>
 
 </body>
 </html>
