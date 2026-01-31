@@ -6,16 +6,32 @@
     <title>adam's homepage</title>
     <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-pos-y: 0%;
+        }
+
         body {
             font-family: "Comic Sans MS", "Comic Sans", "Patrick Hand", cursive;
-            background-image: url('archway.jpg');
-            background-size: cover;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
             color: blue;
             font-size: 1.5em;
             text-align: left;
             padding-left: 20px;
+            margin: 0;
+            background: none;
+        }
+
+        /* ---------- PARALLAX BACKGROUND ---------- */
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+
+            background-image: url('archway.jpg');
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-position: center var(--bg-pos-y);
         }
 
         h1 {
@@ -65,37 +81,7 @@
             cursor: pointer;
         }
 
-        /* ---------- SUBHEADINGS: lilac + pink outline + pink glow ---------- */
-
-        @keyframes pinkGlow {
-            0% {
-                text-shadow:
-                    -1px -1px 0 rgba(255,230,242,1),
-                     1px -1px 0 rgba(255,230,242,1),
-                    -1px  1px 0 rgba(255,230,242,1),
-                     1px  1px 0 rgba(255,230,242,1),
-                     0 0 12px rgba(255,105,180,0.70),
-                     0 0 22px rgba(255,105,180,0.40);
-            }
-            50% {
-                text-shadow:
-                    -1px -1px 0 rgba(255,230,242,1),
-                     1px -1px 0 rgba(255,230,242,1),
-                    -1px  1px 0 rgba(255,230,242,1),
-                     1px  1px 0 rgba(255,230,242,1),
-                     0 0 18px rgba(255,105,180,0.95),
-                     0 0 30px rgba(255,105,180,0.60);
-            }
-            100% {
-                text-shadow:
-                    -1px -1px 0 rgba(255,200,220,1),
-                     1px -1px 0 rgba(255,200,220,1),
-                    -1px  1px 0 rgba(255,200,220,1),
-                     1px  1px 0 rgba(255,200,220,1),
-                     0 0 12px rgba(255,105,180,0.70),
-                     0 0 22px rgba(255,105,180,0.40);
-            }
-        }
+        /* ---------- SUBHEADINGS: lilac + thick, softer pink outline ---------- */
 
         .subhead {
             color: #d7b3e6;
@@ -105,38 +91,16 @@
             display: inline-block;
             margin-top: 18px;
             margin-bottom: 6px;
-            animation: pinkGlow 5.5s ease-in-out infinite;
-        }
 
-        /* ---------- ADVANCED SEARCH: green text + green glow ---------- */
-
-        @keyframes greenGlow {
-            0% {
-                text-shadow:
-                    0 0 6px rgba(57,255,20,0.55),
-                    0 0 14px rgba(57,255,20,0.30);
-            }
-            50% {
-                text-shadow:
-                    0 0 12px rgba(57,255,20,0.95),
-                    0 0 26px rgba(57,255,20,0.55);
-            }
-            100% {
-                text-shadow:
-                    0 0 6px rgba(57,255,20,0.55),
-                    0 0 14px rgba(57,255,20,0.30);
-            }
-        }
-
-        a.advanced-search:link,
-        a.advanced-search:visited,
-        a.advanced-search:active,
-        a.advanced-search:hover {
-            color: #39FF14;
-            font-style: italic;
-            font-size: 1.3em;
-            text-decoration: none;
-            animation: greenGlow 4s ease-in-out infinite;
+            text-shadow:
+                2px 0   0 rgba(255,90,165,0.75),
+               -2px 0   0 rgba(255,90,165,0.75),
+                0   2px 0 rgba(255,90,165,0.75),
+                0  -2px 0 rgba(255,90,165,0.75),
+                2px 2px 0 rgba(255,90,165,0.75),
+               -2px 2px 0 rgba(255,90,165,0.75),
+                2px -2px 0 rgba(255,90,165,0.75),
+               -2px -2px 0 rgba(255,90,165,0.75);
         }
     </style>
 </head>
@@ -235,6 +199,25 @@ subscribe to granta, tank, baffler?
     document.getElementById("quickTerm").addEventListener("keydown", (e) => {
         if (e.key === "Enter") runQuickSearch();
     });
+
+    /* ---------- PARALLAX LOGIC ---------- */
+
+    const MAX_BG_PERCENT = 90;   // now 90%
+    const SPEED = 0.55;
+
+    function updateParallax() {
+        const doc = document.documentElement;
+        const scrollTop = window.scrollY || doc.scrollTop || 0;
+        const maxScroll = Math.max(1, doc.scrollHeight - window.innerHeight);
+        const progress = Math.min(1, scrollTop / maxScroll);
+
+        const pos = Math.min(MAX_BG_PERCENT, progress * MAX_BG_PERCENT * SPEED);
+        document.documentElement.style.setProperty("--bg-pos-y", pos + "%");
+    }
+
+    window.addEventListener("scroll", updateParallax, { passive: true });
+    window.addEventListener("resize", updateParallax);
+    updateParallax();
 </script>
 
 </body>
