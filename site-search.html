@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Site Search Builder</title>
+  <style>
+    body { font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 16px; }
+    .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    input[type="text"] { padding: 8px 10px; min-width: 320px; }
+    button { padding: 8px 10px; cursor:pointer; }
+    .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-top: 12px; }
+    fieldset { border: 1px solid #ddd; border-radius: 10px; padding: 10px 12px; }
+    legend { padding: 0 6px; font-weight: 600; }
+    label { display:flex; gap:8px; align-items:center; margin: 6px 0; }
+    code { background:#f6f6f6; padding:2px 6px; border-radius: 6px; }
+    textarea { width: 100%; height: 74px; margin-top: 10px; padding: 10px; }
+    .muted { color:#666; }
+  </style>
+</head>
+<body>
+  <h2>Google site: query builder</h2>
+
+  <div class="row">
+    <input id="term" type="text" placeholder='Search term (e.g. "chiral")' />
+    <button id="searchBtn">Search</button>
+    <button id="copyBtn">Copy query</button>
+    <span class="muted">Tip: use quotes for exact phrases.</span>
+  </div>
+
+  <div class="row" style="margin-top:10px;">
+    <strong>Quick actions:</strong>
+    <button data-action="all">Select all</button>
+    <button data-action="none">Select none</button>
+    <button data-action="invert">Invert</button>
+    <span style="margin-left:10px;"></span>
+    <strong>Tag filter:</strong>
+    <select id="tagFilter">
+      <option value="__all__">All tags</option>
+    </select>
+  </div>
+
+  <div class="grid" id="groups"></div>
+
+  <textarea id="queryOut" readonly></textarea>
+
+<script>
+const publications = [
+  // group, name, domain, tags[]
+  ["Art/Theory", "e-flux", "e-flux.com", ["art","theory"]],
+  ["Art/Theory", "Grey Room", "greyroom.org", ["theory","academia"]],
+  ["Art/Theory", "Brooklyn Rail", "brooklynrail.org", ["art","criticism"]],
+  ["Art/Theory", "Tank", "tank.tv", ["art","culture"]],
+  ["Art/Theory", "Cabinet", "cabinetmagazine.org", ["art","theory"]],
+  ["Art/Theory", "&&&", "tripleampersand.org", ["theory","culture"]],
+  ["Lit/Essay", "The Baffler", "thebaffler.com", ["politics","criticism"]],
+  ["Lit/Essay", "Granta", "granta.com", ["literary"]],
+  ["Lit/Essay", "The White Review", "thewhitereview.org", ["literary","criticism"]],
+  ["Lit/Essay", "The Stinging Fly", "stingingfly.org", ["literary"]],
+  ["Lit/Essay", "Asymptote", "asymptotejournal.com", ["literary","translation"]],
+  ["Lit/Essay", "Poetry Foundation", "poetryfoundation.org", ["poetry"]],
+  ["Lit/Essay", "SPAM Zine", "spamzine.co.uk", ["literary"]],
+  ["Lit/Essay", "The Drift", "thedriftmag.com", ["politics","literary"]],
+  ["Other", "Ambient Receiver", "ambientreceiver.org", ["sound","culture"]],
+  ["Other", "Emergency Magazine", "emergencemagazine.org", ["ecology","culture"]],
+  ["Other", "The Diagram", "thediagram.com", ["literary","weird"]],
+  ["Other", "Blackbox Manifold", "blackboxmanifold.org", ["culture","theory"]],
+];
+
+// --- build UI ---
+const groupsEl = document.getElementById("groups");
+const tagFilterEl = document.getElementById("tagFilter");
+const queryOut = document.getElementById("queryOut");
+const termEl = document.getElementById("term");
+
+const allTags = new Set();
+publications.forEach(p => p[3].forEach(t => allTags.add(t)));
+[...allTags].sort().forEach(t => {
+  const opt = document.createElement("option");
+  opt.value = t; opt.textContent = t;
+  tagFilterEl.appendChild(opt);
+});
+
+function makeId(domain){ return "cb_" + domain.replace(/[^a-z0-9]/gi, "_"); }
+
+function render(){
+  groupsEl.innerHTML = "";
+  const byGroup = new Map();
+  publications.forEach(([group,name,domain,tags]) => {
+    if(!byGroup.has(group)) byGroup.set(group, []);
+    byGroup.get(group).push({name,domain,tags});
+  });
+
+  for (const [group, items] of byGroup.entries()){
+    const fs = document.createElement("fieldset");
+    const lg = document.createElement("legend");
+    lg.textContent = group;
+    fs.appendChild(lg);
+
+    items.forEach(({name,domain,tags}) => {
+      const id = makeId(domain);
+      const lab = document.createElement("label");
+      lab.dataset.tags = tags.join(",");
+      lab.innerHTML = `
+        <input type="checkbox" id="${id}" data-domain="${domain}" checked />
+        <span><strong>${name}</strong> <span class="muted">(${domain})</span> <span class="muted">[${tags.join(", ")}]</span></span>
+      `;
+      fs.appendChild(lab);
+    });
+
+    groupsEl.appendChild(fs);
+  }
+  updateQuery();
+  applyTagFilter();
+}
+
+function selectedDomains(){
+  return [...document.querySelectorAll('input[type="checkbox"][data-domain]')]
+    .filter(cb => cb.checked && cb.closest("label") && cb.closest("label").style.display !== "none")
+    .map(cb => cb.dataset.domain);
+}
+
+function buildQuery(){
+  const term = termEl.value.trim();
+  const domains = selectedDomains();
+  const siteClause = domains.length
+    ? "(" + domains.map(d => `site:${d}`).join(" OR ") + ")"
+    : "";
+  return (term ? term + " " : "") + siteClause;
+}
+
+function updateQuery(){
+  queryOut.value = buildQuery().trim();
+}
+
+function applyTagFilter(){
+  const tag = tagFilterEl.value;
+  const labels = [...document.querySelectorAll("label[data-tags]")];
+  labels.forEach(lab => {
+    if(tag === "__all__") { lab.style.display = ""; return; }
+    const tags = lab.dataset.tags.split(",");
+    lab.style.display = tags.includes(tag) ? "" : "none";
+  });
+  updateQuery();
+}
+
+// events
+document.addEventListener("change", (e) => {
+  if(e.target.matches('input[type="checkbox"][data-domain]')) updateQuery();
+  if(e.target === tagFilterEl) applyTagFilter();
+});
+
+document.querySelectorAll("button[data-action]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const action = btn.dataset.action;
+    const boxes = [...document.querySelectorAll('input[type="checkbox"][data-domain]')]
+      .filter(cb => cb.closest("label").style.display !== "none");
+    if(action === "all") boxes.forEach(b => b.checked = true);
+    if(action === "none") boxes.forEach(b => b.checked = false);
+    if(action === "invert") boxes.forEach(b => b.checked = !b.checked);
+    updateQuery();
+  });
+});
+
+document.getElementById("searchBtn").addEventListener("click", () => {
+  const q = buildQuery().trim();
+  if(!q) return;
+  window.open("https://www.google.com/search?q=" + encodeURIComponent(q), "_blank");
+});
+
+document.getElementById("copyBtn").addEventListener("click", async () => {
+  const q = buildQuery().trim();
+  if(!q) return;
+  try { await navigator.clipboard.writeText(q); }
+  catch { /* ignore */ }
+});
+
+termEl.addEventListener("keydown", (e) => {
+  if(e.key === "Enter") document.getElementById("searchBtn").click();
+});
+
+render();
+</script>
+</body>
+</html>
