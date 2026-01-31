@@ -27,20 +27,19 @@
             position: fixed;
             inset: 0;
             z-index: -1;
-
             background-image: url('archway.jpg');
             background-repeat: no-repeat;
             background-size: cover;
             background-position: center var(--bg-pos-y);
         }
 
+        /* ---------- TITLE ---------- */
+
         h1 {
             font-size: 3em;
             text-transform: lowercase;
-            background: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet);
-            -webkit-background-clip: text;
-            color: #e0bbe4;
-            text-shadow: 2px 2px 5px #FF69B4;
+            color: #fff3a6; /* pastel yellow */
+            text-shadow: 2px 2px 6px rgba(255, 180, 90, 0.65); /* pastel orange */
         }
 
         a:link {
@@ -81,7 +80,7 @@
             cursor: pointer;
         }
 
-        /* ---------- SUBHEADINGS: lilac + thick, softer pink outline ---------- */
+        /* ---------- SUBHEADINGS ---------- */
 
         .subhead {
             color: #d7b3e6;
@@ -91,7 +90,6 @@
             display: inline-block;
             margin-top: 18px;
             margin-bottom: 6px;
-
             text-shadow:
                 2px 0   0 rgba(255,90,165,0.75),
                -2px 0   0 rgba(255,90,165,0.75),
@@ -101,6 +99,15 @@
                -2px 2px 0 rgba(255,90,165,0.75),
                 2px -2px 0 rgba(255,90,165,0.75),
                -2px -2px 0 rgba(255,90,165,0.75);
+        }
+
+        /* ---------- ADVANCED SEARCH ---------- */
+
+        .advanced-search {
+            font-style: italic;
+            text-shadow:
+                0 0 4px rgba(140, 255, 170, 0.6),
+                0 0 8px rgba(140, 255, 170, 0.4);
         }
     </style>
 </head>
@@ -181,6 +188,9 @@
 
 <a href="site-search.html" class="advanced-search">advanced search</a>
 
+<br><br>
+subscribe to granta, tank, baffler?
+
 <script src="sites.js"></script>
 <script>
     function buildSiteClause(domains) {
@@ -208,7 +218,7 @@
 
     /* ---------- PARALLAX LOGIC ---------- */
 
-    const MAX_BG_PERCENT = 90;   // now 90%
+    const MAX_BG_PERCENT = 90;
     const SPEED = 0.55;
 
     function updateParallax() {
@@ -216,7 +226,6 @@
         const scrollTop = window.scrollY || doc.scrollTop || 0;
         const maxScroll = Math.max(1, doc.scrollHeight - window.innerHeight);
         const progress = Math.min(1, scrollTop / maxScroll);
-
         const pos = Math.min(MAX_BG_PERCENT, progress * MAX_BG_PERCENT * SPEED);
         document.documentElement.style.setProperty("--bg-pos-y", pos + "%");
     }
@@ -228,3 +237,4 @@
 
 </body>
 </html>
+
