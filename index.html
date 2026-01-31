@@ -38,8 +38,10 @@
         h1 {
             font-size: 3em;
             text-transform: lowercase;
-            color: #fff3a6; /* pastel yellow */
-            text-shadow: 2px 2px 6px rgba(255, 145, 60, 0.75); /* more orange orange */
+            color: #fff3a6;
+            text-shadow:
+                2px 2px 4px rgba(255, 90, 95, 0.9),
+                4px 4px 8px rgba(255, 90, 95, 0.65);
         }
 
         a:link {
@@ -67,7 +69,7 @@
             font-family: inherit;
             font-size: 1em;
             min-width: 320px;
-            background: rgba(255,255,255,0.66); /* 66% opacity */
+            background: rgba(255,255,255,0.8);
         }
 
         .search-wrap button {
@@ -76,8 +78,8 @@
             border: 1px solid rgba(0,0,0,0.2);
             font-family: inherit;
             font-size: 1em;
-            color: #0b1a33; /* navy / midnight blue */
-            background: rgba(255,255,255,0.66); /* 66% opacity */
+            color: #466fd4;
+            background: rgba(255,255,255,0.8);
             cursor: pointer;
         }
 
@@ -107,15 +109,24 @@
         .advanced-search {
             font-style: italic;
             text-shadow:
-                0 0 4px rgba(140, 255, 170, 0.6),
-                0 0 8px rgba(140, 255, 170, 0.4);
+                0 0 6px rgba(140, 255, 170, 0.65),
+                0 0 14px rgba(140, 255, 170, 0.45);
+        }
+
+        /* ---------- BOTTOM GIF ---------- */
+
+        .bottom-gif {
+            width: 108px; /* half the previous size */
+            height: auto;
+            display: block;
+            margin-top: 12px;
         }
     </style>
 </head>
 
 <body>
 
-<h1>home :)</h1>
+<h1>hello :)</h1>
 
 <a href="https://granta.com">granta</a><br>
 <a href="https://thebaffler.com/latest">the baffler</a><br>
@@ -189,9 +200,6 @@
 
 <a href="site-search.html" class="advanced-search">advanced search</a>
 
-<br><br>
-subscribe to granta, tank, baffler?
-
 <script src="sites.js"></script>
 <script>
     function buildSiteClause(domains) {
@@ -217,8 +225,6 @@ subscribe to granta, tank, baffler?
         if (e.key === "Enter") runQuickSearch();
     });
 
-    /* ---------- PARALLAX LOGIC ---------- */
-
     const MAX_BG_PERCENT = 90;
     const SPEED = 0.55;
 
@@ -235,6 +241,9 @@ subscribe to granta, tank, baffler?
     window.addEventListener("resize", updateParallax);
     updateParallax();
 </script>
+
+<br>
+<img src="91.gif" alt="flower" class="bottom-gif">
 
 </body>
 </html>
