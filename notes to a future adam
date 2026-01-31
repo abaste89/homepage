@@ -1,0 +1,29 @@
+- Bringing searchable sites and linked sites into closer alignment
+
+At the moment there is a split between sites that appear on the homepage link list and sites that exist only in the search tool. Now that the tool is genuinely useful, this split feels artificial. Many sites that are valuable to search across are also worth seeing explicitly as part of the visible reading ecology on the homepage.
+
+The homepage should be understood as a map of attention rather than just a list of frequently clicked sites. This means it can and should include sites that are read occasionally rather than daily, are more useful as archives than as feeds, or are conceptually important even if they are not always browsed directly. As a result, several sites that currently exist only in the search tool should be brought across into the homepage link list.
+
+- Adding missing but important publications
+
+A number of important publications should be added where they are currently missing, either to the link list, the search corpus, or both. These include The Wire, The Quietus, n+1, London Review of Books, Jacket2, and Los Angeles Review of Books.
+
+- Acknowledging that not all content is equally searchable
+
+Some sites do not index well in Google searches because their content is published primarily as PDFs, scanned images of text, or other non-HTML formats. This should not exclude them from the system altogether. Including such sites in a Google site search does no harm; at worst they simply return no results. The system should be explicit about how each site is intended to be used.
+
+- Marking sites as link, search, or both
+
+To handle differences in how sites function, the site list should explicitly mark whether a site should appear on the homepage, be included in the search corpus, or both. Each site entry should therefore include flags indicating whether it is link-only, search-only, or link-and-search. This avoids forcing a one-size-fits-all model and reflects how different sites are actually used.
+
+- Moving toward a single source of truth
+
+In the longer term, the most elegant and maintainable solution would be to treat the site list as a single canonical catalogue stored in a JS file. The homepage link list would be generated from this catalogue using the link flag. The quick search and advanced search would draw their domains from the same catalogue using the search flag. Groups and tags used by the advanced search interface would remain intact and coexist with these flags. This would reduce duplication, prevent inconsistencies, and make adding or removing sites straightforward without collapsing the conceptual structure of the tool.
+
+- Adding a print section
+
+It would be useful to add a print section to the homepage. This section could include journals that do not publish online, print-first or print-only magazines, and bookshops. This reinforces the idea that the project is not only about searchable content but also about the broader material conditions of reading and publishing.
+
+- Including defunct but relevant PDF-only publishers
+
+Two defunct but still relevant PDF-only publishers should be added to the catalogue as archive or link-only entries: gausspdf and troll thread. These sites no longer publish new material but remain online as archives and are conceptually important even if they are not productive search targets.
