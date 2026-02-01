@@ -1,0 +1,1770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sitebook Editor</title>
+  <style>
+    :root{
+      --bg:#0b0c10;
+      --panel:#12141b;
+      --panel2:#151824;
+      --text:#e7e7ea;
+      --muted:#a7a7b3;
+      --line:#2a2e3a;
+      --accent:#ff4fb8;
+      --accent2:#c7ff4f;
+      --danger:#ff5b5b;
+      --ok:#4fff8b;
+      --shadow: 0 12px 28px rgba(0,0,0,.45);
+      --radius: 14px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background:
+        radial-gradient(1200px 800px at 20% 0%, rgba(255,79,184,.18), transparent 55%),
+        radial-gradient(1200px 800px at 90% 30%, rgba(199,255,79,.10), transparent 55%),
+        var(--bg);
+      color:var(--text);
+      font-family:var(--sans);
+    }
+    header{
+      position:sticky;
+      top:0;
+      z-index:10;
+      backdrop-filter: blur(10px);
+      background: rgba(11,12,16,.78);
+      border-bottom: 1px solid rgba(42,46,58,.7);
+    }
+    .wrap{
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 14px 16px;
+    }
+    .topbar{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      justify-content:space-between;
+    }
+    .title{
+      display:flex;
+      align-items:baseline;
+      gap:10px;
+    }
+    .title h1{
+      font-size: 18px;
+      margin:0;
+      letter-spacing:.3px;
+      font-weight:750;
+    }
+    .pill{
+      font-family:var(--mono);
+      font-size:12px;
+      padding:3px 8px;
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:999px;
+      color:var(--muted);
+      background: rgba(255,255,255,.04);
+    }
+    .controls{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    button{
+      appearance:none;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.05);
+      color: var(--text);
+      padding: 8px 10px;
+      border-radius: 10px;
+      cursor:pointer;
+      font-size: 13px;
+      transition: transform .05s ease, border-color .2s ease, background .2s ease;
+    }
+    button:hover{
+      border-color: rgba(255,79,184,.55);
+      background: rgba(255,79,184,.12);
+    }
+    button:active{transform: translateY(1px);}
+    button.primary{
+      border-color: rgba(255,79,184,.6);
+      background: rgba(255,79,184,.18);
+    }
+    button.good{
+      border-color: rgba(79,255,139,.45);
+      background: rgba(79,255,139,.12);
+    }
+    button.danger{
+      border-color: rgba(255,91,91,.55);
+      background: rgba(255,91,91,.12);
+    }
+    button.subtle{
+      border-color: rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      color: var(--muted);
+    }
+    .help{
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+      margin: 8px 0 0;
+      max-width: 90ch;
+    }
+    .layout{
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 14px;
+      padding: 14px 16px 22px;
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+    @media (max-width: 1000px){
+      .layout{grid-template-columns: 1fr; }
+    }
+    .panel{
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
+      border: 1px solid rgba(255,255,255,.09);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .panel-header{
+      padding: 12px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.07);
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:center;
+      background: rgba(18,20,27,.65);
+    }
+    .panel-header h2{
+      margin:0;
+      font-size: 13px;
+      letter-spacing:.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 800;
+    }
+    .panel-body{ padding: 12px; }
+
+    .status{
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--muted);
+      padding: 8px 10px;
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 12px;
+      background: rgba(0,0,0,.18);
+    }
+
+    /* Sections */
+    .sections{
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .section{
+      border: 1px solid rgba(255,255,255,.09);
+      border-radius: 14px;
+      overflow:hidden;
+      background: rgba(18,20,27,.45);
+    }
+    .section-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap: 10px;
+      padding: 10px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      background: rgba(255,255,255,.02);
+    }
+    .section-title{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      min-width: 0;
+      flex: 1;
+    }
+    .section-title input{
+      width: 100%;
+      min-width: 140px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.12);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 7px 9px;
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+    .section-actions{
+      display:flex;
+      gap:6px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .section-actions button{
+      padding: 6px 8px;
+      border-radius: 10px;
+      font-size: 12px;
+    }
+
+    .dropzone{
+      padding: 10px;
+      min-height: 44px;
+    }
+    .dropzone.dragover{
+      outline: 2px dashed rgba(255,79,184,.7);
+      outline-offset: 2px;
+      background: rgba(255,79,184,.08);
+      border-radius: 14px;
+    }
+
+    .site-chip{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      padding: 8px 10px;
+      margin: 6px 0;
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 12px;
+      background: rgba(21,24,36,.65);
+      cursor: grab;
+      user-select:none;
+    }
+    .site-chip:active{ cursor: grabbing; }
+    .site-chip .left{
+      min-width:0;
+      flex:1;
+    }
+    .site-chip .name{
+      font-size: 13px;
+      font-weight: 700;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 520px;
+    }
+    .site-chip .id{
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--muted);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 520px;
+    }
+    .flags{
+      display:flex;
+      gap:6px;
+      align-items:center;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .flag{
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 999px;
+      padding: 2px 7px;
+      background: rgba(255,255,255,.03);
+    }
+    .flag.on{ border-color: rgba(79,255,139,.35); color: rgba(79,255,139,.9); }
+    .flag.off{ border-color: rgba(255,255,255,.10); color: rgba(200,200,210,.7); }
+
+    /* Right panel controls */
+    .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    label.field{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      font-size: 12px;
+      color: var(--muted);
+      flex:1;
+      min-width: 220px;
+    }
+    input.text, select{
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.16);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 13px;
+      width: 100%;
+      outline: none;
+    }
+    input.text:focus, select:focus{
+      border-color: rgba(255,79,184,.65);
+      box-shadow: 0 0 0 4px rgba(255,79,184,.12);
+    }
+    .checks{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:8px;
+      margin-top: 8px;
+    }
+    .check{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      padding: 10px 10px;
+      border: 1px solid rgba(255,255,255,.09);
+      background: rgba(255,255,255,.02);
+      border-radius: 12px;
+    }
+    .check strong{
+      font-size: 13px;
+      color: var(--text);
+      font-weight: 700;
+    }
+    .check span{
+      display:block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+      max-width: 64ch;
+    }
+    .toggle{
+      display:flex;
+      align-items:center;
+      gap: 8px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .toggle input{ transform: scale(1.15); }
+
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text);
+      line-height: 1.2;
+      cursor: default;
+    }
+    .chip button{
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      color: var(--muted);
+    }
+    .chip button:hover{
+      border-color: rgba(255,79,184,.55);
+      background: rgba(255,79,184,.12);
+      color: var(--text);
+    }
+
+    .box{
+      margin-top: 10px;
+      border: 1px solid rgba(255,255,255,.09);
+      border-radius: 12px;
+      overflow:hidden;
+    }
+    .box-head{
+      padding: 10px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.07);
+      background: rgba(255,255,255,.02);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap: 10px;
+    }
+    .box-head h3{
+      margin:0;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: var(--muted);
+      font-weight: 800;
+    }
+    .box-body{
+      padding: 10px;
+      display:flex;
+      flex-direction:column;
+      gap: 8px;
+      max-height: 240px;
+      overflow:auto;
+    }
+    .site-row{
+      display:flex;
+      justify-content:space-between;
+      gap: 10px;
+      padding: 8px 10px;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 12px;
+      background: rgba(21,24,36,.50);
+      cursor:pointer;
+    }
+    .site-row:hover{
+      border-color: rgba(255,79,184,.45);
+      background: rgba(255,79,184,.10);
+    }
+    .site-row.active{
+      border-color: rgba(199,255,79,.55);
+      background: rgba(199,255,79,.10);
+    }
+    .site-row .meta{
+      min-width:0;
+      flex:1;
+    }
+    .site-row .meta .line1{
+      font-size: 13px;
+      font-weight: 700;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 520px;
+    }
+    .site-row .meta .line2{
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--muted);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 520px;
+    }
+
+    .msg{
+      margin-top: 10px;
+      padding: 10px 10px;
+      border-radius: 12px;
+      font-size: 12.5px;
+      line-height: 1.35;
+      display:none;
+    }
+    .msg.warn{
+      border: 1px solid rgba(255,91,91,.35);
+      background: rgba(255,91,91,.10);
+      color: rgba(255,230,230,.95);
+    }
+    .msg.ok{
+      border: 1px solid rgba(79,255,139,.25);
+      background: rgba(79,255,139,.08);
+      color: rgba(220,255,235,.95);
+    }
+
+    .codebox{
+      margin-top: 12px;
+      border: 1px solid rgba(255,255,255,.09);
+      border-radius: 12px;
+      overflow:hidden;
+      display:none;
+    }
+    .codebox pre{
+      margin:0;
+      padding: 10px;
+      background: rgba(0,0,0,.25);
+      font-family: var(--mono);
+      font-size: 11.5px;
+      line-height: 1.35;
+      color: rgba(231,231,234,.95);
+      max-height: 280px;
+      overflow:auto;
+      white-space: pre;
+    }
+
+    dialog{
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 16px;
+      background: rgba(18,20,27,.98);
+      color: var(--text);
+      padding: 0;
+      width: min(860px, calc(100vw - 24px));
+      box-shadow: var(--shadow);
+    }
+    dialog::backdrop{
+      background: rgba(0,0,0,.65);
+      backdrop-filter: blur(4px);
+    }
+    .dlg-head{
+      padding: 12px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap: 10px;
+      background: rgba(255,255,255,.02);
+    }
+    .dlg-head h3{
+      margin:0;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: var(--muted);
+      font-weight: 800;
+    }
+    .dlg-body{ padding: 12px; }
+    .groups-list{
+      display:flex;
+      flex-direction:column;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .group-row{
+      display:flex;
+      gap: 8px;
+      align-items:center;
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 12px;
+      padding: 8px;
+      background: rgba(255,255,255,.03);
+    }
+    .group-row input{
+      flex: 1;
+      min-width: 180px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.16);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 13px;
+      font-family: var(--mono);
+    }
+    .kbd{
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="title">
+        <h1>Sitebook Editor</h1>
+        <span class="pill">offline-friendly</span>
+      </div>
+      <div class="controls">
+        <button class="subtle" id="btnAutoLoad">Load sites.js</button>
+        <button class="subtle" id="btnImport">Import sites.js</button>
+        <button class="subtle" id="btnValidate">Validate</button>
+        <button class="subtle" id="btnGroups">Advanced groups</button>
+        <button class="primary" id="btnExport">Export sites.js</button>
+      </div>
+    </div>
+    <div class="help">
+      Drag sites to reorder inside a homepage section, or move them between sections. If you opened this file directly, use “Import sites.js”.
+      Export produces a new <span class="kbd">sites.js</span> for you to upload/commit.
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- LEFT: Homepage structure -->
+  <section class="panel">
+    <div class="panel-header">
+      <h2>Homepage sections & order</h2>
+      <div class="controls">
+        <button class="good" id="btnAddSection">Add section</button>
+        <button class="good" id="btnAddSite">Add site</button>
+        <span class="status" id="status">Not loaded</span>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div class="row">
+        <label class="field" style="min-width:260px;flex:1;">
+          Filter homepage items (by id/label)
+          <input class="text" id="homeFilter" placeholder="type to filter..." />
+        </label>
+      </div>
+      <div class="sections" id="sections"></div>
+    </div>
+  </section>
+
+  <!-- RIGHT: Site details -->
+  <aside class="panel">
+    <div class="panel-header">
+      <h2>Selected site</h2>
+      <div class="controls">
+        <button class="danger" id="btnDeleteSite" title="Delete this site">Delete site</button>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div id="noSelection" class="help">Click a site (either on the homepage list, or in All Sites) to edit it.</div>
+
+      <div id="details" style="display:none">
+        <div class="row">
+          <label class="field">
+            Site ID (stable key)
+            <input class="text" id="siteId" disabled />
+          </label>
+          <label class="field">
+            Display label
+            <input class="text" id="siteLabel" placeholder="e.g. granta" />
+          </label>
+        </div>
+
+        <div class="row">
+          <label class="field">
+            URL (link destination)
+            <input class="text" id="siteUrl" placeholder="https://example.com" />
+          </label>
+        </div>
+
+        <div class="row">
+          <label class="field">
+            Domain (for site: search)
+            <input class="text" id="siteDomain" placeholder="example.com" />
+          </label>
+        </div>
+
+        <div class="checks">
+          <div class="check">
+            <div>
+              <strong>On homepage</strong>
+              <span>Shown on the homepage when listed in a section.</span>
+            </div>
+            <div class="toggle">
+              <input type="checkbox" id="siteOnHomepage" />
+              <span class="kbd">home</span>
+            </div>
+          </div>
+
+          <div class="check">
+            <div>
+              <strong>Included in homepage search-bar</strong>
+              <span>Included in the homepage quick search domain clause.</span>
+            </div>
+            <div class="toggle">
+              <input type="checkbox" id="siteQuick" />
+              <span class="kbd">quick</span>
+            </div>
+          </div>
+
+          <div class="check">
+            <div>
+              <strong>Selectable in advanced search</strong>
+              <span>Shows as a checkbox on the advanced search page.</span>
+            </div>
+            <div class="toggle">
+              <input type="checkbox" id="siteAdvanced" />
+              <span class="kbd">adv</span>
+            </div>
+          </div>
+
+          <div class="check">
+            <div>
+              <strong>Advanced search default checked</strong>
+              <span>If unticked, it’s available in advanced search but not preselected.</span>
+            </div>
+            <div class="toggle">
+              <input type="checkbox" id="siteAdvDefault" />
+              <span class="kbd">default</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="box">
+          <div class="box-head">
+            <h3>Advanced groups (multi-select)</h3>
+            <div class="kbd">shown only if site is advanced-selectable</div>
+          </div>
+          <div class="box-body" id="advGroupsBox"></div>
+        </div>
+
+        <div class="box">
+          <div class="box-head">
+            <h3>Tags</h3>
+            <div class="controls">
+              <button class="subtle" id="btnClearTags" title="Remove all tags from this site">Clear</button>
+            </div>
+          </div>
+          <div class="box-body">
+            <div class="row">
+              <label class="field" style="min-width: 260px;">
+                Add a tag (press Enter)
+                <input class="text" id="tagInput" placeholder="e.g. criticism, ecology, media-theory" />
+              </label>
+            </div>
+            <div id="tagChips" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;"></div>
+            <div class="help" id="tagSuggestions" style="margin-top:10px;"></div>
+          </div>
+        </div>
+
+        <div class="msg ok" id="okBox"></div>
+        <div class="msg warn" id="warnBox"></div>
+
+        <div class="box">
+          <div class="box-head">
+            <h3>All sites</h3>
+            <div class="controls">
+              <button class="subtle" id="btnPreview">Preview sites.js</button>
+              <button class="subtle" id="btnCopy">Copy sites.js</button>
+            </div>
+          </div>
+          <div class="box-body" id="allSites"></div>
+        </div>
+
+        <div class="codebox" id="codebox">
+          <pre id="codepreview"></pre>
+        </div>
+
+        <div class="row" style="justify-content:flex-end;margin-top:10px;">
+          <button class="subtle" id="btnHidePreview">Hide preview</button>
+        </div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<!-- Advanced Groups dialog -->
+<dialog id="dlgGroups">
+  <div class="dlg-head">
+    <h3>Manage advanced groups</h3>
+    <div class="controls">
+      <button class="good" id="dlgAddGroup">Add group</button>
+      <button class="subtle" id="dlgClose">Close</button>
+    </div>
+  </div>
+  <div class="dlg-body">
+    <div class="help">
+      These are the advanced search buckets and their order. Renaming a group updates all sites using it.
+      Deleting a group requires reassignment.
+    </div>
+    <div class="groups-list" id="groupsList"></div>
+  </div>
+</dialog>
+
+<input type="file" id="fileInput" accept=".js" style="display:none" />
+
+<script>
+(() => {
+  // -----------------------------
+  // State
+  // -----------------------------
+  let state = null;           // { homeSections:[], advancedGroups:[], sites:{} }
+  let selectedSiteId = null;
+  let loadedFrom = "Not loaded";
+
+  // -----------------------------
+  // DOM
+  // -----------------------------
+  const elStatus = document.getElementById("status");
+  const elSections = document.getElementById("sections");
+  const elAllSites = document.getElementById("allSites");
+  const elHomeFilter = document.getElementById("homeFilter");
+
+  const elNoSel = document.getElementById("noSelection");
+  const elDetails = document.getElementById("details");
+
+  const elSiteId = document.getElementById("siteId");
+  const elSiteLabel = document.getElementById("siteLabel");
+  const elSiteUrl = document.getElementById("siteUrl");
+  const elSiteDomain = document.getElementById("siteDomain");
+
+  const elSiteOnHomepage = document.getElementById("siteOnHomepage");
+  const elSiteQuick = document.getElementById("siteQuick");
+  const elSiteAdvanced = document.getElementById("siteAdvanced");
+  const elSiteAdvDefault = document.getElementById("siteAdvDefault");
+
+  const elAdvGroupsBox = document.getElementById("advGroupsBox");
+
+  const elTagInput = document.getElementById("tagInput");
+  const elTagChips = document.getElementById("tagChips");
+  const elTagSuggestions = document.getElementById("tagSuggestions");
+
+  const elWarn = document.getElementById("warnBox");
+  const elOk = document.getElementById("okBox");
+
+  const elCodebox = document.getElementById("codebox");
+  const elCodepreview = document.getElementById("codepreview");
+
+  const fileInput = document.getElementById("fileInput");
+
+  const dlg = document.getElementById("dlgGroups");
+  const dlgGroupsList = document.getElementById("groupsList");
+
+  // -----------------------------
+  // Buttons
+  // -----------------------------
+  document.getElementById("btnAutoLoad").addEventListener("click", () => autoLoadSitesJs(true));
+  document.getElementById("btnImport").addEventListener("click", () => fileInput.click());
+  document.getElementById("btnValidate").addEventListener("click", validateAndShow);
+  document.getElementById("btnGroups").addEventListener("click", openGroupsDialog);
+  document.getElementById("btnExport").addEventListener("click", exportSitesJs);
+
+  document.getElementById("btnAddSection").addEventListener("click", addSection);
+  document.getElementById("btnAddSite").addEventListener("click", addSite);
+  document.getElementById("btnDeleteSite").addEventListener("click", deleteSelectedSite);
+
+  document.getElementById("btnPreview").addEventListener("click", showPreview);
+  document.getElementById("btnCopy").addEventListener("click", copySitesJs);
+  document.getElementById("btnHidePreview").addEventListener("click", hidePreview);
+
+  document.getElementById("btnClearTags").addEventListener("click", clearTags);
+
+  document.getElementById("dlgAddGroup").addEventListener("click", addAdvancedGroup);
+  document.getElementById("dlgClose").addEventListener("click", () => dlg.close());
+
+  elHomeFilter.addEventListener("input", render);
+
+  // site fields
+  elSiteLabel.addEventListener("input", () => updateSiteField("label", elSiteLabel.value));
+  elSiteUrl.addEventListener("input", () => updateSiteField("url", elSiteUrl.value));
+  elSiteDomain.addEventListener("input", () => updateSiteField("domain", elSiteDomain.value));
+
+  elSiteOnHomepage.addEventListener("change", () => updateSiteField("onHomepage", !!elSiteOnHomepage.checked));
+  elSiteQuick.addEventListener("change", () => updateSiteField("inQuickSearch", !!elSiteQuick.checked));
+  elSiteAdvanced.addEventListener("change", () => updateSiteField("inAdvancedSearch", !!elSiteAdvanced.checked));
+  elSiteAdvDefault.addEventListener("change", () => updateSiteField("defaultAdvanced", !!elSiteAdvDefault.checked));
+
+  elTagInput.addEventListener("keydown", (e) => {
+    if(e.key === "Enter"){
+      e.preventDefault();
+      addTagFromInput();
+    }
+  });
+
+  // import handler
+  fileInput.addEventListener("change", async () => {
+    const f = fileInput.files && fileInput.files[0];
+    fileInput.value = "";
+    if(!f) return;
+    const text = await f.text();
+    const imported = parseSitesJs(text);
+    if(!imported){
+      showWarn("Import failed: file did not contain a usable window.SITEBOOK object.");
+      return;
+    }
+    state = normalizeState(imported);
+    loadedFrom = `Imported file: ${f.name}`;
+    selectedSiteId = null;
+    render();
+    showOk("Imported successfully.");
+  });
+
+  // -----------------------------
+  // Boot: attempt auto-load
+  // -----------------------------
+  autoLoadSitesJs(false);
+
+  // -----------------------------
+  // Loading
+  // -----------------------------
+  async function autoLoadSitesJs(showToast){
+    hideMsg();
+    try{
+      const res = await fetch("./sites.js", { cache: "no-store" });
+      if(!res.ok) throw new Error(`HTTP ${res.status}`);
+      const text = await res.text();
+      const imported = parseSitesJs(text);
+      if(!imported) throw new Error("No window.SITEBOOK found");
+      state = normalizeState(imported);
+      loadedFrom = "Auto-loaded: ./sites.js";
+      selectedSiteId = null;
+      render();
+      if(showToast) showOk("Loaded sites.js.");
+    }catch(err){
+      loadedFrom = "Not loaded";
+      setStatus();
+      if(showToast){
+        showWarn("Could not auto-load ./sites.js. If you opened this file directly, use Import sites.js.");
+      }
+    }
+  }
+
+  function parseSitesJs(sourceText){
+    // Execute in a sandboxed "window" object and read back window.SITEBOOK.
+    try{
+      const sandbox = {};
+      const fn = new Function("window", sourceText + "\n;return window.SITEBOOK;");
+      const sb = fn(sandbox);
+      if(!sb || typeof sb !== "object") return null;
+      return sb;
+    }catch{
+      return null;
+    }
+  }
+
+  // -----------------------------
+  // Normalization / helpers
+  // -----------------------------
+  function normalizeState(sb){
+    const out = {
+      homeSections: Array.isArray(sb.homeSections) ? sb.homeSections.map(s => ({
+        label: typeof s.label === "string" ? s.label : "",
+        items: Array.isArray(s.items) ? s.items.slice() : []
+      })) : [],
+      advancedGroups: Array.isArray(sb.advancedGroups) ? sb.advancedGroups.slice() : [],
+      sites: (sb.sites && typeof sb.sites === "object") ? deepClone(sb.sites) : {}
+    };
+
+    // Ensure each site has required keys
+    for(const [id, s] of Object.entries(out.sites)){
+      if(!s || typeof s !== "object") { delete out.sites[id]; continue; }
+      s.label = s.label ?? id;
+      s.url = s.url ?? "";
+      s.domain = s.domain ?? "";
+      s.onHomepage = (s.onHomepage !== false);
+      s.inQuickSearch = !!s.inQuickSearch;
+      s.inAdvancedSearch = !!s.inAdvancedSearch;
+      s.defaultAdvanced = (s.defaultAdvanced !== false);
+
+      // advancedGroups can be string (legacy) or array (preferred)
+      if(Array.isArray(s.advancedGroups)){
+        s.advancedGroups = s.advancedGroups.filter(Boolean);
+      }else if(typeof s.advancedGroup === "string" && s.advancedGroup.trim()){
+        s.advancedGroups = [s.advancedGroup.trim()];
+        delete s.advancedGroup;
+      }else{
+        s.advancedGroups = [];
+      }
+
+      s.tags = Array.isArray(s.tags) ? s.tags.filter(Boolean) : [];
+    }
+
+    // Ensure at least one section exists
+    if(out.homeSections.length === 0){
+      out.homeSections.push({ label: "(top)", items: [] });
+    }
+
+    // Ensure "(top)" exists first if present elsewhere
+    const topIdx = out.homeSections.findIndex(s => s.label === "(top)");
+    if(topIdx > 0){
+      const [top] = out.homeSections.splice(topIdx, 1);
+      out.homeSections.unshift(top);
+    }
+    return out;
+  }
+
+  function deepClone(obj){
+    // structuredClone not always available offline; do a safe JSON clone for our data-only schema
+    return JSON.parse(JSON.stringify(obj));
+  }
+
+  function setStatus(){
+    elStatus.textContent = loadedFrom;
+  }
+
+  function normId(s){
+    return (s || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9\-]+/g, "-")
+      .replace(/\-+/g, "-")
+      .replace(/^\-+|\-+$/g, "");
+  }
+
+  function mkBtn(text, cls, title){
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = text;
+    if(cls) b.className = cls;
+    if(title) b.title = title;
+    return b;
+  }
+
+  function flagPill(text, on){
+    const span = document.createElement("span");
+    span.className = "flag " + (on ? "on" : "off");
+    span.textContent = text;
+    return span;
+  }
+
+  function hideMsg(){
+    elWarn.style.display = "none";
+    elOk.style.display = "none";
+    elWarn.textContent = "";
+    elOk.textContent = "";
+  }
+  function showWarn(msg){
+    elWarn.textContent = msg;
+    elWarn.style.display = "block";
+    elOk.style.display = "none";
+  }
+  function showOk(msg){
+    elOk.textContent = msg;
+    elOk.style.display = "block";
+    elWarn.style.display = "none";
+  }
+
+  function ensureState(){
+    if(!state){
+      state = { homeSections: [{ label:"(top)", items:[] }], advancedGroups: [], sites: {} };
+      loadedFrom = "Blank state";
+    }
+  }
+
+  // -----------------------------
+  // Rendering
+  // -----------------------------
+  function render(){
+    ensureState();
+    setStatus();
+    renderSections();
+    renderAllSites();
+    renderDetails();
+    hidePreview();
+  }
+
+  function renderSections(){
+    elSections.innerHTML = "";
+    const filter = (elHomeFilter.value || "").trim().toLowerCase();
+
+    state.homeSections.forEach((section, sIndex) => {
+      const sectionEl = document.createElement("div");
+      sectionEl.className = "section";
+
+      const head = document.createElement("div");
+      head.className = "section-head";
+
+      const titleWrap = document.createElement("div");
+      titleWrap.className = "section-title";
+
+      const labelInput = document.createElement("input");
+      labelInput.value = section.label;
+      labelInput.placeholder = "section label (e.g. p o l i t i c s)";
+      labelInput.addEventListener("input", () => {
+        state.homeSections[sIndex].label = labelInput.value;
+      });
+
+      titleWrap.appendChild(labelInput);
+
+      const actions = document.createElement("div");
+      actions.className = "section-actions";
+
+      const btnUp = mkBtn("↑", "subtle", "Move section up");
+      btnUp.addEventListener("click", () => moveSection(sIndex, -1));
+
+      const btnDown = mkBtn("↓", "subtle", "Move section down");
+      btnDown.addEventListener("click", () => moveSection(sIndex, +1));
+
+      const btnDel = mkBtn("Delete", "danger", "Delete section (sites remain)");
+      btnDel.addEventListener("click", () => deleteSection(sIndex));
+
+      actions.appendChild(btnUp);
+      actions.appendChild(btnDown);
+      actions.appendChild(btnDel);
+
+      head.appendChild(titleWrap);
+      head.appendChild(actions);
+
+      const drop = document.createElement("div");
+      drop.className = "dropzone";
+      drop.dataset.sectionIndex = String(sIndex);
+
+      drop.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        drop.classList.add("dragover");
+      });
+      drop.addEventListener("dragleave", () => drop.classList.remove("dragover"));
+      drop.addEventListener("drop", (e) => {
+        e.preventDefault();
+        drop.classList.remove("dragover");
+        const payload = e.dataTransfer.getData("text/plain");
+        if(!payload) return;
+        const { siteId, fromSectionIndex } = JSON.parse(payload);
+        moveSiteToSection(siteId, Number(fromSectionIndex), sIndex);
+      });
+
+      const ids = section.items || [];
+      ids.forEach((id, idx) => {
+        const site = state.sites[id];
+        const name = site?.label || "(missing site)";
+        const match = !filter || id.toLowerCase().includes(filter) || String(name).toLowerCase().includes(filter);
+        if(!match) return;
+
+        const chip = document.createElement("div");
+        chip.className = "site-chip";
+        chip.draggable = true;
+
+        chip.addEventListener("dragstart", (e) => {
+          e.dataTransfer.setData("text/plain", JSON.stringify({ siteId: id, fromSectionIndex: sIndex }));
+          e.dataTransfer.effectAllowed = "move";
+        });
+
+        chip.addEventListener("click", () => selectSite(id));
+
+        // allow drop before this chip (reorder)
+        chip.addEventListener("dragover", (e) => e.preventDefault());
+        chip.addEventListener("drop", (e) => {
+          e.preventDefault();
+          const payload = e.dataTransfer.getData("text/plain");
+          if(!payload) return;
+          const { siteId, fromSectionIndex } = JSON.parse(payload);
+          reorderSiteBefore(siteId, Number(fromSectionIndex), sIndex, idx);
+        });
+
+        const left = document.createElement("div");
+        left.className = "left";
+
+        const nameLine = document.createElement("div");
+        nameLine.className = "name";
+        nameLine.textContent = name;
+
+        const idLine = document.createElement("div");
+        idLine.className = "id";
+        idLine.textContent = id;
+
+        left.appendChild(nameLine);
+        left.appendChild(idLine);
+
+        const flags = document.createElement("div");
+        flags.className = "flags";
+        flags.appendChild(flagPill("home", site ? site.onHomepage !== false : false));
+        flags.appendChild(flagPill("quick", !!site?.inQuickSearch));
+        flags.appendChild(flagPill("adv", !!site?.inAdvancedSearch));
+        flags.appendChild(flagPill("def", !!site?.defaultAdvanced));
+
+        chip.appendChild(left);
+        chip.appendChild(flags);
+
+        drop.appendChild(chip);
+      });
+
+      sectionEl.appendChild(head);
+      sectionEl.appendChild(drop);
+      elSections.appendChild(sectionEl);
+    });
+  }
+
+  function renderAllSites(){
+    elAllSites.innerHTML = "";
+    const ids = Object.keys(state.sites).sort((a,b) => a.localeCompare(b));
+    for(const id of ids){
+      const s = state.sites[id];
+      const row = document.createElement("div");
+      row.className = "site-row" + (id === selectedSiteId ? " active" : "");
+      row.addEventListener("click", () => selectSite(id));
+
+      const meta = document.createElement("div");
+      meta.className = "meta";
+
+      const l1 = document.createElement("div");
+      l1.className = "line1";
+      l1.textContent = s.label || id;
+
+      const l2 = document.createElement("div");
+      l2.className = "line2";
+      const flags = [
+        s.onHomepage !== false ? "home" : "",
+        s.inQuickSearch ? "quick" : "",
+        s.inAdvancedSearch ? "adv" : "",
+        s.defaultAdvanced ? "def" : ""
+      ].filter(Boolean).join(", ");
+      l2.textContent = `${id}  •  ${s.domain || "(no domain)"}  •  ${flags || "—"}`;
+
+      meta.appendChild(l1);
+      meta.appendChild(l2);
+
+      const pillBox = document.createElement("div");
+      pillBox.className = "flags";
+      pillBox.appendChild(flagPill("home", s.onHomepage !== false));
+      pillBox.appendChild(flagPill("quick", !!s.inQuickSearch));
+      pillBox.appendChild(flagPill("adv", !!s.inAdvancedSearch));
+      pillBox.appendChild(flagPill("def", !!s.defaultAdvanced));
+
+      row.appendChild(meta);
+      row.appendChild(pillBox);
+
+      elAllSites.appendChild(row);
+    }
+  }
+
+  function renderDetails(){
+    const s = selectedSiteId ? state.sites[selectedSiteId] : null;
+    if(!s){
+      elNoSel.style.display = "block";
+      elDetails.style.display = "none";
+      return;
+    }
+    elNoSel.style.display = "none";
+    elDetails.style.display = "block";
+
+    elSiteId.value = selectedSiteId;
+    elSiteLabel.value = s.label ?? "";
+    elSiteUrl.value = s.url ?? "";
+    elSiteDomain.value = s.domain ?? "";
+
+    elSiteOnHomepage.checked = (s.onHomepage !== false);
+    elSiteQuick.checked = !!s.inQuickSearch;
+    elSiteAdvanced.checked = !!s.inAdvancedSearch;
+    elSiteAdvDefault.checked = (s.defaultAdvanced !== false);
+
+    renderAdvancedGroupCheckboxes();
+    renderTagsUI();
+
+    hideMsg();
+  }
+
+  function renderAdvancedGroupCheckboxes(){
+    const s = state.sites[selectedSiteId];
+    elAdvGroupsBox.innerHTML = "";
+
+    const note = document.createElement("div");
+    note.className = "help";
+    note.style.margin = "0 0 6px";
+    note.textContent = s.inAdvancedSearch
+      ? "Tick which advanced groups this site appears under."
+      : "This site is not advanced-selectable. (You can still set groups; they’ll take effect once adv is enabled.)";
+    elAdvGroupsBox.appendChild(note);
+
+    const groups = state.advancedGroups || [];
+    if(groups.length === 0){
+      const empty = document.createElement("div");
+      empty.className = "help";
+      empty.textContent = "No advanced groups yet. Click “Advanced groups” at the top to add some.";
+      elAdvGroupsBox.appendChild(empty);
+      return;
+    }
+
+    const current = Array.isArray(s.advancedGroups) ? s.advancedGroups : [];
+    groups.forEach(g => {
+      const lab = document.createElement("label");
+      lab.style.margin = "6px 0";
+      lab.style.alignItems = "center";
+      lab.style.gap = "10px";
+
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = current.includes(g);
+      cb.addEventListener("change", () => {
+        const now = new Set(state.sites[selectedSiteId].advancedGroups || []);
+        if(cb.checked) now.add(g); else now.delete(g);
+        state.sites[selectedSiteId].advancedGroups = Array.from(now);
+        render();
+        selectSite(selectedSiteId);
+      });
+
+      const span = document.createElement("span");
+      span.textContent = g;
+
+      lab.appendChild(cb);
+      lab.appendChild(span);
+
+      elAdvGroupsBox.appendChild(lab);
+    });
+  }
+
+  // -----------------------------
+  // Tags
+  // -----------------------------
+  function normTag(t){
+    return (t || "")
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9\-]+/g, "")
+      .replace(/\-+/g, "-")
+      .replace(/^\-+|\-+$/g, "");
+  }
+
+  function allKnownTags(){
+    const set = new Set();
+    for(const s of Object.values(state.sites)){
+      for(const t of (s.tags || [])) set.add(t);
+    }
+    return Array.from(set).sort((a,b) => a.localeCompare(b));
+  }
+
+  function renderTagsUI(){
+    const s = state.sites[selectedSiteId];
+    const tags = Array.isArray(s.tags) ? s.tags : [];
+
+    elTagChips.innerHTML = "";
+    tags.forEach(t => {
+      const chip = document.createElement("span");
+      chip.className = "chip";
+      chip.textContent = t;
+
+      const x = document.createElement("button");
+      x.type = "button";
+      x.textContent = "×";
+      x.title = "Remove tag";
+      x.addEventListener("click", (e) => {
+        e.stopPropagation();
+        s.tags = (s.tags || []).filter(tt => tt !== t);
+        render();
+        selectSite(selectedSiteId);
+      });
+
+      chip.appendChild(x);
+      elTagChips.appendChild(chip);
+    });
+
+    const known = allKnownTags().filter(t => !tags.includes(t));
+    if(known.length){
+      elTagSuggestions.innerHTML = "Suggestions: " + known.slice(0, 16).map(t => `<span class="chip" data-tag="${t}" style="cursor:pointer">${t}</span>`).join(" ");
+      elTagSuggestions.querySelectorAll(".chip").forEach(ch => {
+        ch.addEventListener("click", () => {
+          elTagInput.value = ch.getAttribute("data-tag") || "";
+          addTagFromInput();
+        });
+      });
+    }else{
+      elTagSuggestions.textContent = "Suggestions: (none yet)";
+    }
+  }
+
+  function addTagFromInput(){
+    if(!selectedSiteId) return;
+    const raw = elTagInput.value;
+    const tag = normTag(raw);
+    if(!tag) return;
+
+    const s = state.sites[selectedSiteId];
+    s.tags = Array.isArray(s.tags) ? s.tags : [];
+    if(!s.tags.includes(tag)) s.tags.push(tag);
+
+    elTagInput.value = "";
+    render();
+    selectSite(selectedSiteId);
+  }
+
+  function clearTags(){
+    if(!selectedSiteId) return;
+    state.sites[selectedSiteId].tags = [];
+    render();
+    selectSite(selectedSiteId);
+  }
+
+  // -----------------------------
+  // Selection + editing
+  // -----------------------------
+  function selectSite(id){
+    selectedSiteId = id;
+    renderAllSites();
+    renderDetails();
+  }
+
+  function updateSiteField(field, value){
+    if(!selectedSiteId) return;
+    const s = state.sites[selectedSiteId];
+    s[field] = value;
+
+    // If a site is not advanced selectable, still keep defaultAdvanced but it won't matter.
+    renderAllSites();
+    renderSections();
+  }
+
+  // -----------------------------
+  // Sections manipulation
+  // -----------------------------
+  function addSection(){
+    ensureState();
+    state.homeSections.push({ label: "new section", items: [] });
+    render();
+    showOk("Added section.");
+  }
+
+  function moveSection(idx, delta){
+    const j = idx + delta;
+    if(j < 0 || j >= state.homeSections.length) return;
+    const [s] = state.homeSections.splice(idx, 1);
+    state.homeSections.splice(j, 0, s);
+    render();
+  }
+
+  function deleteSection(idx){
+    const sec = state.homeSections[idx];
+    if(!sec) return;
+    // Keep sites in registry; only remove the section list
+    state.homeSections.splice(idx, 1);
+    if(state.homeSections.length === 0){
+      state.homeSections.push({ label:"(top)", items:[] });
+    }
+    render();
+  }
+
+  function removeFromSection(sectionIndex, siteId){
+    const sec = state.homeSections[sectionIndex];
+    if(!sec) return;
+    sec.items = (sec.items || []).filter(x => x !== siteId);
+  }
+
+  function moveSiteToSection(siteId, fromSectionIndex, toSectionIndex){
+    if(fromSectionIndex === toSectionIndex) return;
+    removeFromSection(fromSectionIndex, siteId);
+    const target = state.homeSections[toSectionIndex];
+    target.items = target.items || [];
+    // append to end
+    if(!target.items.includes(siteId)) target.items.push(siteId);
+
+    // Turn on homepage flag when moved into a section (sensible default)
+    if(state.sites[siteId]) state.sites[siteId].onHomepage = true;
+
+    render();
+  }
+
+  function reorderSiteBefore(siteId, fromSectionIndex, toSectionIndex, beforeIndex){
+    // remove from source
+    removeFromSection(fromSectionIndex, siteId);
+
+    const target = state.homeSections[toSectionIndex];
+    target.items = target.items || [];
+    // remove if already present
+    target.items = target.items.filter(x => x !== siteId);
+
+    const idx = Math.max(0, Math.min(beforeIndex, target.items.length));
+    target.items.splice(idx, 0, siteId);
+
+    // Turn on homepage flag when placed into section
+    if(state.sites[siteId]) state.sites[siteId].onHomepage = true;
+
+    render();
+  }
+
+  // -----------------------------
+  // Sites CRUD
+  // -----------------------------
+  function addSite(){
+    ensureState();
+    const base = prompt("New site ID (letters/numbers/dashes). Example: 'lrb' or 'future-feed'");
+    if(base === null) return;
+    const id = normId(base);
+    if(!id){ showWarn("Invalid site ID."); return; }
+    if(state.sites[id]){ showWarn("That site ID already exists."); return; }
+
+    state.sites[id] = {
+      label: id,
+      url: "",
+      domain: "",
+      onHomepage: true,
+      inQuickSearch: false,
+      inAdvancedSearch: false,
+      defaultAdvanced: true,
+      advancedGroups: [],
+      tags: []
+    };
+
+    // put it in top section by default
+    state.homeSections[0].items = state.homeSections[0].items || [];
+    state.homeSections[0].items.push(id);
+
+    render();
+    selectSite(id);
+    showOk("Added site.");
+  }
+
+  function deleteSelectedSite(){
+    if(!selectedSiteId) return;
+    const id = selectedSiteId;
+    const ok = confirm(`Delete site "${id}"?\n\nThis removes it from the registry and all homepage sections.`);
+    if(!ok) return;
+
+    // remove from sections
+    for(let i=0; i<state.homeSections.length; i++){
+      removeFromSection(i, id);
+    }
+    // remove from registry
+    delete state.sites[id];
+
+    selectedSiteId = null;
+    render();
+    showOk("Deleted site.");
+  }
+
+  // -----------------------------
+  // Advanced groups dialog
+  // -----------------------------
+  function openGroupsDialog(){
+    ensureState();
+    renderGroupsDialog();
+    dlg.showModal();
+  }
+
+  function renderGroupsDialog(){
+    dlgGroupsList.innerHTML = "";
+    const groups = state.advancedGroups || [];
+
+    groups.forEach((g, idx) => {
+      const row = document.createElement("div");
+      row.className = "group-row";
+
+      const input = document.createElement("input");
+      input.value = g;
+      input.addEventListener("change", () => {
+        const newName = input.value.trim();
+        if(!newName){ input.value = state.advancedGroups[idx]; return; }
+
+        // prevent duplicates
+        if(state.advancedGroups.some((x,i)=>i!==idx && x===newName)){
+          showWarn("Group name already exists.");
+          input.value = state.advancedGroups[idx];
+          return;
+        }
+
+        // rename in list
+        const oldName = state.advancedGroups[idx];
+        state.advancedGroups[idx] = newName;
+
+        // rename cascade in all sites
+        for(const s of Object.values(state.sites)){
+          s.advancedGroups = (s.advancedGroups || []).map(x => x === oldName ? newName : x);
+        }
+
+        render();
+        renderGroupsDialog();
+        showOk("Renamed group.");
+      });
+
+      const up = mkBtn("↑", "subtle", "Move up");
+      up.addEventListener("click", () => {
+        if(idx === 0) return;
+        const [x] = state.advancedGroups.splice(idx, 1);
+        state.advancedGroups.splice(idx-1, 0, x);
+        renderGroupsDialog();
+        render();
+      });
+
+      const down = mkBtn("↓", "subtle", "Move down");
+      down.addEventListener("click", () => {
+        if(idx === state.advancedGroups.length-1) return;
+        const [x] = state.advancedGroups.splice(idx, 1);
+        state.advancedGroups.splice(idx+1, 0, x);
+        renderGroupsDialog();
+        render();
+      });
+
+      const del = mkBtn("Delete", "danger", "Delete group (requires reassignment)");
+      del.addEventListener("click", () => deleteAdvancedGroup(idx));
+
+      row.appendChild(input);
+      row.appendChild(up);
+      row.appendChild(down);
+      row.appendChild(del);
+
+      dlgGroupsList.appendChild(row);
+    });
+
+    if(groups.length === 0){
+      const empty = document.createElement("div");
+      empty.className = "help";
+      empty.textContent = "No groups yet. Click “Add group”.";
+      dlgGroupsList.appendChild(empty);
+    }
+  }
+
+  function addAdvancedGroup(){
+    const name = prompt("New advanced group name (e.g. Art/Theory)");
+    if(name === null) return;
+    const g = name.trim();
+    if(!g) return;
+    ensureState();
+    if(state.advancedGroups.includes(g)){
+      showWarn("That group already exists.");
+      return;
+    }
+    state.advancedGroups.push(g);
+    renderGroupsDialog();
+    render();
+    showOk("Added group.");
+  }
+
+  function deleteAdvancedGroup(idx){
+    const oldName = state.advancedGroups[idx];
+    const usedBy = Object.entries(state.sites).filter(([id,s]) => (s.advancedGroups || []).includes(oldName)).map(([id]) => id);
+    let reassignment = null;
+
+    if(usedBy.length){
+      const options = state.advancedGroups.filter((g,i)=>i!==idx);
+      const msg = `Group "${oldName}" is used by ${usedBy.length} site(s).\n\nType the name of the group to reassign them to:\n${options.join("\n")}\n\n(Or Cancel)`;
+      const pick = prompt(msg);
+      if(pick === null) return;
+      reassignment = pick.trim();
+      if(!options.includes(reassignment)){
+        showWarn("Reassignment group not found; deletion cancelled.");
+        return;
+      }
+    }
+
+    // apply reassignment
+    if(reassignment){
+      for(const s of Object.values(state.sites)){
+        s.advancedGroups = (s.advancedGroups || []).map(g => g === oldName ? reassignment : g);
+      }
+    }else{
+      // remove from sites silently
+      for(const s of Object.values(state.sites)){
+        s.advancedGroups = (s.advancedGroups || []).filter(g => g !== oldName);
+      }
+    }
+
+    // remove group from list
+    state.advancedGroups.splice(idx, 1);
+    renderGroupsDialog();
+    render();
+    showOk("Deleted group.");
+  }
+
+  // -----------------------------
+  // Validation / Audit
+  // -----------------------------
+  function validate(){
+    const issues = [];
+
+    // 1) section ids that don't exist
+    for(const sec of state.homeSections){
+      for(const id of (sec.items || [])){
+        if(!state.sites[id]){
+          issues.push(`Homepage section "${sec.label}" contains missing site id: "${id}"`);
+        }
+      }
+    }
+
+    // 2) sites marked onHomepage:true but not in any section
+    const inSections = new Set();
+    for(const sec of state.homeSections){
+      for(const id of (sec.items || [])) inSections.add(id);
+    }
+    for(const [id,s] of Object.entries(state.sites)){
+      if(s.onHomepage !== false && !inSections.has(id)){
+        issues.push(`Site "${id}" has onHomepage=true but is not placed in any homepage section.`);
+      }
+    }
+
+    // 3) advanced selectable must have domain
+    for(const [id,s] of Object.entries(state.sites)){
+      if(s.inAdvancedSearch && !String(s.domain || "").trim()){
+        issues.push(`Site "${id}" is advanced-selectable but has no domain.`);
+      }
+    }
+
+    // 4) quick search must have domain
+    for(const [id,s] of Object.entries(state.sites)){
+      if(s.inQuickSearch && !String(s.domain || "").trim()){
+        issues.push(`Site "${id}" is in quick search but has no domain.`);
+      }
+    }
+
+    // 5) advanced selectable should have at least one group (warn only)
+    for(const [id,s] of Object.entries(state.sites)){
+      if(s.inAdvancedSearch && (!Array.isArray(s.advancedGroups) || s.advancedGroups.length === 0)){
+        issues.push(`Site "${id}" is advanced-selectable but has no advanced group (will appear as ungrouped).`);
+      }
+    }
+
+    // 6) duplicate ids within same section
+    for(const sec of state.homeSections){
+      const seen = new Set();
+      for(const id of (sec.items || [])){
+        if(seen.has(id)) issues.push(`Homepage section "${sec.label}" contains duplicate id: "${id}"`);
+        seen.add(id);
+      }
+    }
+
+    return issues;
+  }
+
+  function validateAndShow(){
+    hideMsg();
+    const issues = validate();
+    if(issues.length === 0){
+      showOk("Validation: no issues found.");
+      return;
+    }
+    showWarn("Validation issues:\n- " + issues.join("\n- "));
+  }
+
+  // -----------------------------
+  // Export / Preview
+  // -----------------------------
+  function toSitesJs(){
+    const sb = {
+      homeSections: state.homeSections.map(s => ({
+        label: s.label,
+        items: (s.items || []).slice()
+      })),
+      advancedGroups: (state.advancedGroups || []).slice(),
+      sites: {}
+    };
+
+    for(const [id, s] of Object.entries(state.sites)){
+      sb.sites[id] = {
+        label: s.label ?? id,
+        url: s.url ?? "",
+        domain: s.domain ?? "",
+        onHomepage: (s.onHomepage !== false),
+        inQuickSearch: !!s.inQuickSearch,
+        inAdvancedSearch: !!s.inAdvancedSearch,
+        defaultAdvanced: (s.defaultAdvanced !== false),
+        advancedGroups: Array.isArray(s.advancedGroups) ? s.advancedGroups.slice() : [],
+        tags: Array.isArray(s.tags) ? s.tags.slice() : []
+      };
+    }
+
+    const pretty = JSON.stringify(sb, null, 2);
+    return `// sites.js (generated by editor.html)\nwindow.SITEBOOK = ${pretty};\n`;
+  }
+
+  function download(filename, text){
+    const blob = new Blob([text], { type: "application/javascript;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function exportSitesJs(){
+    ensureState();
+    const issues = validate();
+    // don't block export, but warn
+    if(issues.length){
+      showWarn("Exporting with issues:\n- " + issues.join("\n- "));
+    }else{
+      showOk("Exported sites.js.");
+    }
+    download("sites.js", toSitesJs());
+  }
+
+  function showPreview(){
+    ensureState();
+    elCodepreview.textContent = toSitesJs();
+    elCodebox.style.display = "block";
+  }
+
+  function hidePreview(){
+    elCodebox.style.display = "none";
+    elCodepreview.textContent = "";
+  }
+
+  async function copySitesJs(){
+    ensureState();
+    try{
+      await navigator.clipboard.writeText(toSitesJs());
+      showOk("Copied sites.js to clipboard.");
+    }catch{
+      showWarn("Clipboard copy failed (browser permissions). Use Export instead.");
+    }
+  }
+
+  // -----------------------------
+  // Init render if state already loaded
+  // -----------------------------
+  function setInitialUI(){
+    setStatus();
+    render();
+  }
+})();
+</script>
+</body>
+</html>

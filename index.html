@@ -116,10 +116,19 @@
         /* ---------- BOTTOM GIF ---------- */
 
         .bottom-gif {
-            width: 108px; /* half the previous size */
+            width: 108px;
             height: auto;
             display: block;
             margin-top: 12px;
+        }
+
+        /* ---------- (tiny) safety message ---------- */
+        .sitebook-warn {
+            color: #fff3a6;
+            font-size: 0.95em;
+            max-width: 38em;
+            text-shadow:
+              2px 2px 4px rgba(255, 90, 95, 0.65);
         }
     </style>
 </head>
@@ -128,66 +137,8 @@
 
 <h1>hello :)</h1>
 
-<a href="https://granta.com">granta</a><br>
-<a href="https://thebaffler.com/latest">the baffler</a><br>
-<a href="https://www.spamzine.co.uk/plaza">SPAM plaza</a><br>
-<a href="https://tank.tv/magazine">tank</a><br>
-<a href="https://nplusonemag.com">n+1</a><br>
-<a href="https://draughtjournal.com">draught</a><br>
-<a href="https://www.lrb.co.uk/blog/">lrb blog</a><br>
-<a href="https://lareviewofbooks.org">los angeles review of books</a><br>
-<a href="https://bombmagazine.org/discipline/painting">bomb (painting)</a><br>
-<a href="https://artforum.com">art forum</a><br>
-<a href="https://artreview.com">art review</a><br>
-<a href="https://brooklynrail.org">brooklyn rail</a><br>
-<a href="https://spikeartmagazine.com">spike</a><br>
-<a href="https://www.frieze.com">frieze</a><br>
-<a href="https://www.e-flux.com/journal">e-flux</a><br>
-<a href="https://www.greyroom.org">grey room</a><br>
-<a href="https://future-feed.net/">future feed</a><br>
-<a href="https://www.ambientreceiver.org/contents">ambient receiver</a><br>
-<a href="https://emergencemagazine.org">emergence</a><br>
-<a href="https://dis.art">dis.art</a><br>
-<a href="https://interludedocs.com">interlude docs</a><br>
-
-<br>
-
-<span class="subhead">p o l i t i c s</span><br>
-<a href="https://damagemag.com">damage</a><br>
-<a href="https://newleftreview.org/sidecar">nlr sidecar</a><br>
-<a href="https://novaramedia.com/">novara</a><br>
-<a href="https://www.dissentmagazine.org/">dissent</a><br>
-<a href="https://www.thecanary.co">the canary</a><br>
-
-<br>
-
-<span class="subhead">m u s i c</span><br>
-<a href="https://thequietus.com">the quietus</a><br>
-<a href="https://www.thewire.co.uk">the wire</a><br>
-
-<br>
-
-<span class="subhead">p o e t r y</span><br>
-<a href="https://www.spamzine.co.uk/">SPAM</a><br>
-<a href="https://jacket2.org">jacket2</a><br>
-<a href="https://blackboxmanifold.sites.sheffield.ac.uk/">blackbox manifold</a><br>
-<a href="https://pxxtry.com/">free trials</a><br>
-<a href="https://www.blush-lit.com/">blush</a><br>
-<a href="https://erotoplasty.tumblr.com/">erotoplasty</a><br>
-<a href="https://slubpress.cargo.site/">slub press</a><br>
-<a href="https://www.tentacularmag.com/">tentacular mag</a><br>
-<a href="https://dirtchildren.com/journal/">dirt children</a><br>
-<a href="https://thediagram.com/">diagram</a><br>
-<a href="https://www.datableedzine.com/">datableed</a><br>
-<a href="https://www.permeablebarrier.com/lurking">permeable barrier</a><br>
-<a href="https://wonder-publishing.com/shitwonder">shitwonder</a>
-
-<br><br>
-
-<span class="subhead">l i b r a r i e s</span><br>
-<a href="https://writing.upenn.edu/epc/library/">electronic poetry centre</a><br>
-<a href="https://annas-archive.org/">anna's archive</a><br>
-<a href="https://monoskop.org/">monoskop</a>
+<!-- Homepage links will be rendered here from sites.js (window.SITEBOOK) -->
+<div id="homeLinks"></div>
 
 <br><br>
 
@@ -206,18 +157,75 @@
         return "(" + domains.map(d => "site:" + d).join(" OR ") + ")";
     }
 
+    function getQuickSearchDomains() {
+        const sb = window.SITEBOOK;
+        if (!sb || !sb.sites) return [];
+
+        const domains = [];
+        for (const [id, site] of Object.entries(sb.sites)) {
+            if (site && site.inQuickSearch && site.domain) domains.push(site.domain);
+        }
+        // de-dup, stable
+        return Array.from(new Set(domains));
+    }
+
     function runQuickSearch() {
         const term = (document.getElementById("quickTerm").value || "").trim();
         if (!term) return;
 
-        const sites = (window.SITES || []);
-        if (!sites.length) {
+        const domains = getQuickSearchDomains();
+        if (!domains.length) {
             window.open("https://www.google.com/search?q=" + encodeURIComponent(term), "_blank");
             return;
         }
 
-        const q = `${term} ${buildSiteClause(sites)}`.trim();
+        const q = `${term} ${buildSiteClause(domains)}`.trim();
         window.open("https://www.google.com/search?q=" + encodeURIComponent(q), "_blank");
+    }
+
+    function renderHomepageLinks() {
+        const host = document.getElementById("homeLinks");
+        host.innerHTML = "";
+
+        const sb = window.SITEBOOK;
+        if (!sb || !Array.isArray(sb.homeSections) || !sb.sites) {
+            const warn = document.createElement("div");
+            warn.className = "sitebook-warn";
+            warn.textContent = "Site list failed to load (sites.js / window.SITEBOOK missing).";
+            host.appendChild(warn);
+            return;
+        }
+
+        for (const section of sb.homeSections) {
+            const label = (section && typeof section.label === "string") ? section.label : "";
+            const items = (section && Array.isArray(section.items)) ? section.items : [];
+
+            // Spacer between sections (but not before the first output)
+            if (host.childNodes.length) host.appendChild(document.createElement("br"));
+
+            // Heading (skip for "(top)")
+            if (label && label !== "(top)") {
+                const head = document.createElement("span");
+                head.className = "subhead";
+                head.textContent = label;
+                host.appendChild(head);
+                host.appendChild(document.createElement("br"));
+            }
+
+            for (const id of items) {
+                const site = sb.sites[id];
+                if (!site) continue;
+
+                // Respect the "onHomepage" toggle (so you can hide without removing from list)
+                if (site.onHomepage === false) continue;
+
+                const a = document.createElement("a");
+                a.href = site.url || "#";
+                a.textContent = site.label || id;
+                host.appendChild(a);
+                host.appendChild(document.createElement("br"));
+            }
+        }
     }
 
     document.getElementById("quickGo").addEventListener("click", runQuickSearch);
@@ -225,6 +233,7 @@
         if (e.key === "Enter") runQuickSearch();
     });
 
+    // Parallax: scroll background down to a max percent of the image
     const MAX_BG_PERCENT = 90;
     const SPEED = 0.55;
 
@@ -237,13 +246,16 @@
         document.documentElement.style.setProperty("--bg-pos-y", pos + "%");
     }
 
+    // Render once sites.js has executed
+    renderHomepageLinks();
+
     window.addEventListener("scroll", updateParallax, { passive: true });
     window.addEventListener("resize", updateParallax);
     updateParallax();
 </script>
 
 <br>
-<img src="91.gif" alt="flower" class="bottom-gif">
+<img src="flowergif.gif" alt="flower" class="bottom-gif">
 
 </body>
 </html>

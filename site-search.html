@@ -133,6 +133,16 @@
       color: blue;
       background: rgba(255,255,255,0.85);
     }
+
+    .warn {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(255, 230, 170, 0.55);
+      border: 1px solid rgba(0,0,0,0.2);
+      color: rgba(0,0,255,0.9);
+      font-size: 1.0em;
+    }
   </style>
 </head>
 
@@ -165,211 +175,261 @@
       <span class="muted tiny">Group All/None buttons are inside each group box.</span>
     </div>
 
+    <div id="sitebookWarn" class="warn" style="display:none;"></div>
+
     <div class="grid" id="groups"></div>
 
     <textarea id="queryOut" readonly></textarea>
   </div>
 
-<script>
-/*
-  Groups are your main buckets (Art/Theory, Lit/Essay, Ecology, Poetry).
-  Tags are optional extra metadata; tag filter is purely UI show/hide.
-*/
-const publications = [
-  // group, name, domain, tags[]
+  <script src="sites.js"></script>
+  <script>
+    /*
+      Groups are your main buckets (from SITEBOOK.advancedGroups).
+      Tags are optional extra metadata; tag filter is purely UI show/hide (does not change selection).
+      Sites are sourced from window.SITEBOOK.sites where inAdvancedSearch === true.
+    */
 
-  // --- Art/Theory ---
-  ["Art/Theory", "e-flux", "e-flux.com", ["art","theory"]],
-  ["Art/Theory", "Artforum", "artforum.com", ["art","criticism"]],
-  ["Art/Theory", "ArtReview", "artreview.com", ["art","criticism"]],
-  ["Art/Theory", "Texte zur Kunst", "textezurkunst.de", ["theory","art"]],
-  ["Art/Theory", "Spike", "spikeartmagazine.com", ["art","criticism"]],
-  ["Art/Theory", "Grey Room", "greyroom.org", ["theory","academia"]],
-  ["Art/Theory", "Brooklyn Rail", "brooklynrail.org", ["art","criticism"]],
-  ["Art/Theory", "Tank", "tank.tv", ["art","culture"]],
-  ["Art/Theory", "Cabinet", "cabinetmagazine.org", ["art","theory"]],
-  ["Art/Theory", "&&&", "tripleampersand.org", ["theory","culture"]],
+    // --- DOM ---
+    const groupsEl = document.getElementById("groups");
+    const tagFilterEl = document.getElementById("tagFilter");
+    const queryOut = document.getElementById("queryOut");
+    const termEl = document.getElementById("term");
+    const warnEl = document.getElementById("sitebookWarn");
 
-  // --- Lit/Essay ---
-  ["Lit/Essay", "The Baffler", "thebaffler.com", ["politics","criticism"]],
-  ["Lit/Essay", "Granta", "granta.com", ["literary"]],
-  ["Lit/Essay", "The White Review", "thewhitereview.org", ["literary","criticism"]],
-  ["Lit/Essay", "The Stinging Fly", "stingingfly.org", ["literary"]],
-  ["Lit/Essay", "The Drift", "thedriftmag.com", ["politics","literary"]],
-  ["Lit/Essay", "SPAM Zine", "spamzine.co.uk", ["literary","poetry"]],  // intentionally in BOTH Lit/Essay and Poetry
+    function showWarn(msg){
+      warnEl.textContent = msg;
+      warnEl.style.display = "";
+    }
 
-  // --- Ecology ---
-  ["Ecology", "Ambient Receiver", "ambientreceiver.org", ["sound","ecology"]],
-  ["Ecology", "Emergence Magazine", "emergencemagazine.org", ["ecology","culture"]],
+    function normGroupList(site){
+      // Supports either site.advancedGroups (array) or site.advancedGroup (string)
+      if (Array.isArray(site.advancedGroups)) return site.advancedGroups.filter(Boolean);
+      if (typeof site.advancedGroup === "string" && site.advancedGroup.trim()) return [site.advancedGroup.trim()];
+      return [];
+    }
 
-  // --- Poetry ---
-  ["Poetry", "The Diagram", "thediagram.com", ["poetry","weird"]],
-  ["Poetry", "Poetry Foundation", "poetryfoundation.org", ["poetry"]],
-  ["Poetry", "Asymptote", "asymptotejournal.com", ["poetry","translation","literary"]],
-  ["Poetry", "Blackbox Manifold", "blackboxmanifold.sites.sheffield.ac.uk", ["poetry","theory"]],
-  ["Poetry", "SPAM Zine", "spamzine.co.uk", ["poetry","literary"]],     // duplicate on purpose
-];
+    function normTags(site){
+      return Array.isArray(site.tags) ? site.tags.filter(Boolean) : [];
+    }
 
-// --- build UI ---
-const groupsEl = document.getElementById("groups");
-const tagFilterEl = document.getElementById("tagFilter");
-const queryOut = document.getElementById("queryOut");
-const termEl = document.getElementById("term");
+    function makeId(group, domain, siteId){
+      const raw = `${group}__${siteId}__${domain}`;
+      return "cb_" + raw.replace(/[^a-z0-9]/gi, "_");
+    }
 
-// Build tag dropdown from tags present
-const allTags = new Set();
-publications.forEach(p => p[3].forEach(t => allTags.add(t)));
-[...allTags].sort().forEach(t => {
-  const opt = document.createElement("option");
-  opt.value = t; opt.textContent = t;
-  tagFilterEl.appendChild(opt);
-});
+    function buildPublicationsFromSitebook(){
+      const sb = window.SITEBOOK;
+      if (!sb || !sb.sites) {
+        showWarn("Sitebook failed to load (sites.js / window.SITEBOOK missing).");
+        return { items: [], groupOrder: [], allTags: [] };
+      }
 
-function makeId(group, domain, name){
-  // include group and name so duplicates (e.g. SPAM Zine) don't collide
-  const raw = `${group}__${name}__${domain}`;
-  return "cb_" + raw.replace(/[^a-z0-9]/gi, "_");
-}
+      const groupOrder = Array.isArray(sb.advancedGroups) ? sb.advancedGroups.slice() : [];
+      const items = [];
 
-function render(){
-  groupsEl.innerHTML = "";
-  const byGroup = new Map();
-  publications.forEach(([group,name,domain,tags]) => {
-    if(!byGroup.has(group)) byGroup.set(group, []);
-    byGroup.get(group).push({name,domain,tags,group});
-  });
+      for (const [siteId, site] of Object.entries(sb.sites)) {
+        if (!site || !site.inAdvancedSearch) continue;
+        const domain = site.domain;
+        if (!domain) continue;
 
-  // Keep group order stable (so it doesn't depend on insertion quirks)
-  const groupOrder = ["Art/Theory", "Lit/Essay", "Poetry", "Ecology"];
-  const orderedGroups = groupOrder.filter(g => byGroup.has(g));
+        const groups = normGroupList(site);
+        const tags = normTags(site);
+        const checkedByDefault = (site.defaultAdvanced !== false); // default true
 
-  for (const group of orderedGroups){
-    const items = byGroup.get(group);
+        // If no group is set, still include it under a fallback
+        const finalGroups = groups.length ? groups : ["(ungrouped)"];
 
-    const fs = document.createElement("fieldset");
-    fs.dataset.group = group;
+        for (const g of finalGroups) {
+          items.push({
+            group: g,
+            siteId,
+            name: site.label || siteId,
+            domain,
+            tags,
+            checkedByDefault
+          });
+        }
+      }
 
-    const lg = document.createElement("legend");
-    lg.innerHTML = `
-      <span>${group}</span>
-      <span class="legend-actions">
-        <button type="button" data-group-action="all" data-group="${group}">All</button>
-        <button type="button" data-group-action="none" data-group="${group}">None</button>
-      </span>
-    `;
-    fs.appendChild(lg);
+      // Ensure fallback group exists at end if used
+      if (items.some(x => x.group === "(ungrouped)") && !groupOrder.includes("(ungrouped)")) {
+        groupOrder.push("(ungrouped)");
+      }
 
-    items.forEach(({name,domain,tags,group}) => {
-      const id = makeId(group, domain, name);
-      const lab = document.createElement("label");
-      lab.dataset.tags = tags.join(",");
-      lab.dataset.group = group;
-      lab.innerHTML = `
-        <input type="checkbox"
-               id="${id}"
-               data-domain="${domain}"
-               data-group="${group}"
-               checked />
-        <span><strong>${name}</strong>
-          <span class="muted">(${domain})</span>
-          <span class="muted">[${tags.join(", ")}]</span>
-        </span>
-      `;
-      fs.appendChild(lab);
+      // Build tag list
+      const tagSet = new Set();
+      items.forEach(it => it.tags.forEach(t => tagSet.add(t)));
+      const allTags = Array.from(tagSet).sort((a,b) => a.localeCompare(b));
+
+      return { items, groupOrder, allTags };
+    }
+
+    function render(){
+      groupsEl.innerHTML = "";
+
+      const { items, groupOrder, allTags } = buildPublicationsFromSitebook();
+
+      // rebuild tag dropdown (keep "All tags" at top)
+      tagFilterEl.innerHTML = `<option value="__all__">All tags</option>`;
+      allTags.forEach(t => {
+        const opt = document.createElement("option");
+        opt.value = t;
+        opt.textContent = t;
+        tagFilterEl.appendChild(opt);
+      });
+
+      // group items
+      const byGroup = new Map();
+      items.forEach(it => {
+        if(!byGroup.has(it.group)) byGroup.set(it.group, []);
+        byGroup.get(it.group).push(it);
+      });
+
+      // keep group order stable and predictable
+      const orderedGroups = groupOrder.filter(g => byGroup.has(g));
+      // include any groups not listed (just in case), appended alphabetically
+      const extraGroups = Array.from(byGroup.keys()).filter(g => !orderedGroups.includes(g));
+      extraGroups.sort((a,b)=>a.localeCompare(b));
+      const finalGroups = orderedGroups.concat(extraGroups);
+
+      for (const group of finalGroups) {
+        const groupItems = byGroup.get(group);
+
+        const fs = document.createElement("fieldset");
+        fs.dataset.group = group;
+
+        const lg = document.createElement("legend");
+        lg.innerHTML = `
+          <span>${group}</span>
+          <span class="legend-actions">
+            <button type="button" data-group-action="all" data-group="${group}">All</button>
+            <button type="button" data-group-action="none" data-group="${group}">None</button>
+          </span>
+        `;
+        fs.appendChild(lg);
+
+        // keep a stable order inside group: by name
+        groupItems
+          .slice()
+          .sort((a,b) => a.name.localeCompare(b.name))
+          .forEach(({name, domain, tags, group, siteId, checkedByDefault}) => {
+            const id = makeId(group, domain, siteId);
+            const lab = document.createElement("label");
+            lab.dataset.tags = tags.join(",");
+            lab.dataset.group = group;
+            lab.innerHTML = `
+              <input type="checkbox"
+                    id="${id}"
+                    data-domain="${domain}"
+                    data-group="${group}"
+                    ${checkedByDefault ? "checked" : ""} />
+              <span><strong>${escapeHtml(name)}</strong>
+                <span class="muted">(${escapeHtml(domain)})</span>
+                <span class="muted">[${escapeHtml(tags.join(", "))}]</span>
+              </span>
+            `;
+            fs.appendChild(lab);
+          });
+
+        groupsEl.appendChild(fs);
+      }
+
+      updateQuery();
+      applyTagFilter();
+    }
+
+    function escapeHtml(s){
+      return String(s).replace(/[&<>"']/g, c => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+      }[c]));
+    }
+
+    function selectedDomains(){
+      // Include all checked boxes (even if hidden by tag filter).
+      // De-duplicate domains so duplicates across groups don't repeat site: clauses.
+      const domains = [...document.querySelectorAll('input[type="checkbox"][data-domain]')]
+        .filter(cb => cb.checked)
+        .map(cb => cb.dataset.domain);
+
+      return [...new Set(domains)];
+    }
+
+    function buildQuery(){
+      const term = termEl.value.trim();
+      const domains = selectedDomains();
+
+      const siteClause = domains.length
+        ? "(" + domains.map(d => `site:${d}`).join(" OR ") + ")"
+        : "";
+
+      return (term ? term + " " : "") + siteClause;
+    }
+
+    function updateQuery(){
+      queryOut.value = buildQuery().trim();
+    }
+
+    function applyTagFilter(){
+      const tag = tagFilterEl.value;
+      const labels = [...document.querySelectorAll("label[data-tags]")];
+      labels.forEach(lab => {
+        if(tag === "__all__") { lab.style.display = ""; return; }
+        const tags = (lab.dataset.tags || "").split(",").filter(Boolean);
+        lab.style.display = tags.includes(tag) ? "" : "none";
+      });
+      // tag filter does NOT change selection; it only hides/shows rows.
+    }
+
+    // events
+    document.addEventListener("change", (e) => {
+      if(e.target.matches('input[type="checkbox"][data-domain]')) updateQuery();
+      if(e.target === tagFilterEl) applyTagFilter();
     });
 
-    groupsEl.appendChild(fs);
-  }
+    document.addEventListener("click", (e) => {
+      // global quick actions
+      if (e.target.matches("button[data-action]")) {
+        const action = e.target.dataset.action;
+        const boxes = [...document.querySelectorAll('input[type="checkbox"][data-domain]')];
+        if(action === "all") boxes.forEach(b => b.checked = true);
+        if(action === "none") boxes.forEach(b => b.checked = false);
+        if(action === "invert") boxes.forEach(b => b.checked = !b.checked);
+        updateQuery();
+        return;
+      }
 
-  updateQuery();
-  applyTagFilter();
-}
+      // group actions
+      if (e.target.matches("button[data-group-action]")) {
+        const group = e.target.dataset.group;
+        const action = e.target.dataset.groupAction;
 
-function selectedDomains(){
-  // Include all checked boxes (even if hidden by tag filter).
-  // We de-duplicate domains so SPAM appearing twice doesn't create repeated site: clauses.
-  const domains = [...document.querySelectorAll('input[type="checkbox"][data-domain]')]
-    .filter(cb => cb.checked)
-    .map(cb => cb.dataset.domain);
+        const boxes = [...document.querySelectorAll(`input[type="checkbox"][data-group="${CSS.escape(group)}"]`)];
+        if(action === "all") boxes.forEach(b => b.checked = true);
+        if(action === "none") boxes.forEach(b => b.checked = false);
 
-  return [...new Set(domains)];
-}
+        updateQuery();
+        return;
+      }
+    });
 
-function buildQuery(){
-  const term = termEl.value.trim();
-  const domains = selectedDomains();
+    document.getElementById("searchBtn").addEventListener("click", () => {
+      const q = buildQuery().trim();
+      if(!q) return;
+      window.open("https://www.google.com/search?q=" + encodeURIComponent(q), "_blank");
+    });
 
-  const siteClause = domains.length
-    ? "(" + domains.map(d => `site:${d}`).join(" OR ") + ")"
-    : "";
+    document.getElementById("copyBtn").addEventListener("click", async () => {
+      const q = buildQuery().trim();
+      if(!q) return;
+      try { await navigator.clipboard.writeText(q); } catch {}
+    });
 
-  return (term ? term + " " : "") + siteClause;
-}
+    termEl.addEventListener("keydown", (e) => {
+      if(e.key === "Enter") document.getElementById("searchBtn").click();
+    });
 
-function updateQuery(){
-  queryOut.value = buildQuery().trim();
-}
-
-function applyTagFilter(){
-  const tag = tagFilterEl.value;
-  const labels = [...document.querySelectorAll("label[data-tags]")];
-  labels.forEach(lab => {
-    if(tag === "__all__") { lab.style.display = ""; return; }
-    const tags = lab.dataset.tags.split(",");
-    lab.style.display = tags.includes(tag) ? "" : "none";
-  });
-  // tag filter does NOT change selection; it only hides/shows rows.
-}
-
-// events
-document.addEventListener("change", (e) => {
-  if(e.target.matches('input[type="checkbox"][data-domain]')) updateQuery();
-  if(e.target === tagFilterEl) applyTagFilter();
-});
-
-document.addEventListener("click", (e) => {
-  // global quick actions
-  if (e.target.matches("button[data-action]")) {
-    const action = e.target.dataset.action;
-    const boxes = [...document.querySelectorAll('input[type="checkbox"][data-domain]')];
-    if(action === "all") boxes.forEach(b => b.checked = true);
-    if(action === "none") boxes.forEach(b => b.checked = false);
-    if(action === "invert") boxes.forEach(b => b.checked = !b.checked);
-    updateQuery();
-    return;
-  }
-
-  // group actions
-  if (e.target.matches("button[data-group-action]")) {
-    const group = e.target.dataset.group;
-    const action = e.target.dataset.groupAction;
-
-    const boxes = [...document.querySelectorAll(`input[type="checkbox"][data-group="${CSS.escape(group)}"]`)];
-    if(action === "all") boxes.forEach(b => b.checked = true);
-    if(action === "none") boxes.forEach(b => b.checked = false);
-
-    updateQuery();
-    return;
-  }
-});
-
-document.getElementById("searchBtn").addEventListener("click", () => {
-  const q = buildQuery().trim();
-  if(!q) return;
-  window.open("https://www.google.com/search?q=" + encodeURIComponent(q), "_blank");
-});
-
-document.getElementById("copyBtn").addEventListener("click", async () => {
-  const q = buildQuery().trim();
-  if(!q) return;
-  try { await navigator.clipboard.writeText(q); } catch {}
-});
-
-termEl.addEventListener("keydown", (e) => {
-  if(e.key === "Enter") document.getElementById("searchBtn").click();
-});
-
-render();
-</script>
+    render();
+  </script>
 </body>
 </html>
