@@ -27,6 +27,7 @@ Long term edits:
 2. Add Obsidian integration? This would introduce problems around access and security.*
 3. Add RSS?! (I doubt enough of the sites have RSS to make this worthwhile).
 4. Some kind of automated bypass for paywalled sites? This would presumably have to be managed outside of the homepage, but it'd be great to be able to click on paywalled search results and have them just load.
+5. Add random functionality to the flower gif, either (or both) loading a random page from the homepage, or recombining old search terms (an even more interesting variation of this would be 70% old search terms and 30% new terms generated based on previous terms).
 
 *On second thoughts I'm not sure what the point would be: the homepage/search functionalities solve problems, adding raindrop/obsidian to the homepage doesn't really enable you to do anything you couldn't before.
 
