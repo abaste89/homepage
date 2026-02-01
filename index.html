@@ -6,9 +6,7 @@
     <title>adam's homepage</title>
     <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg-pos-y: 0%;
-        }
+        :root { --bg-pos-y: 0%; }
 
         body {
             font-family: "Comic Sans MS", "Comic Sans", "Patrick Hand", cursive;
@@ -21,7 +19,6 @@
         }
 
         /* ---------- PARALLAX BACKGROUND ---------- */
-
         body::before {
             content: "";
             position: fixed;
@@ -34,7 +31,6 @@
         }
 
         /* ---------- TITLE ---------- */
-
         h1 {
             font-size: 3em;
             text-transform: lowercase;
@@ -49,18 +45,10 @@
             font-size: 1.5em;
             text-decoration: none;
         }
-
-        a:visited,
-        a:active {
-            color: #39FF14;
-        }
+        a:visited, a:active { color: #39FF14; }
 
         /* ---------- SEARCH BOX ---------- */
-
-        .search-wrap {
-            margin-top: 10px;
-            margin-bottom: 6px;
-        }
+        .search-wrap { margin-top: 10px; margin-bottom: 6px; }
 
         .search-wrap input[type="text"] {
             padding: 10px 12px;
@@ -84,7 +72,6 @@
         }
 
         /* ---------- SUBHEADINGS ---------- */
-
         .subhead {
             color: #d7b3e6;
             font-weight: 800;
@@ -105,7 +92,6 @@
         }
 
         /* ---------- ADVANCED SEARCH ---------- */
-
         .advanced-search {
             font-style: italic;
             text-shadow:
@@ -114,12 +100,15 @@
         }
 
         /* ---------- BOTTOM GIF ---------- */
-
         .bottom-gif {
             width: 108px;
             height: auto;
             display: block;
             margin-top: 12px;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-drag: none;
+            touch-action: manipulation;
         }
 
         /* ---------- (tiny) safety message ---------- */
@@ -127,8 +116,7 @@
             color: #fff3a6;
             font-size: 0.95em;
             max-width: 38em;
-            text-shadow:
-              2px 2px 4px rgba(255, 90, 95, 0.65);
+            text-shadow: 2px 2px 4px rgba(255, 90, 95, 0.65);
         }
     </style>
 </head>
@@ -153,109 +141,239 @@
 
 <script src="sites.js"></script>
 <script>
-    function buildSiteClause(domains) {
-        return "(" + domains.map(d => "site:" + d).join(" OR ") + ")";
+/* ==========================================================
+   Flower portal (reliable tab behavior):
+   - TAP/CLICK = recombined 2-word (~67%) or 3-word (~33%) phrase → auto-search (new tab)
+   - LONG PRESS (~450ms) = random homepage link (new tab)
+========================================================== */
+
+function buildSiteClause(domains) {
+    return "(" + domains.map(d => "site:" + d).join(" OR ") + ")";
+}
+
+function getQuickSearchDomains() {
+    const sb = window.SITEBOOK;
+    if (!sb || !sb.sites) return [];
+
+    const domains = [];
+    for (const site of Object.values(sb.sites)) {
+        if (site && site.inQuickSearch && site.domain) domains.push(site.domain);
+    }
+    return Array.from(new Set(domains));
+}
+
+/* ---------- open "new tab" best-effort via real <a> click ---------- */
+function openInNewTab(url) {
+    const a = document.createElement("a");
+    a.href = url;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
+/* ---------- search term memory (localStorage) ---------- */
+const TERM_KEY = "adam_search_terms_v1";
+const MAX_TERMS = 200;
+
+function loadTerms() {
+    try { return JSON.parse(localStorage.getItem(TERM_KEY) || "[]"); }
+    catch { return []; }
+}
+
+function saveTerms(terms) {
+    localStorage.setItem(TERM_KEY, JSON.stringify(terms.slice(0, MAX_TERMS)));
+}
+
+function rememberTerm(raw) {
+    const term = (raw || "").trim();
+    if (!term || term.length < 2) return;
+
+    const terms = loadTerms();
+    const lower = term.toLowerCase();
+    const filtered = terms.filter(t => (t || "").toLowerCase() !== lower);
+    filtered.unshift(term);
+    saveTerms(filtered);
+}
+
+/* ---------- recombination (old terms only) ---------- */
+function tokenize(s) {
+    return (s.match(/[A-Za-z0-9]+(?:[’'-][A-Za-z0-9]+)*/g) || []).filter(w => w.length > 1);
+}
+
+/*
+  Returns ONE contiguous chunk of:
+  - 2 words (~67%) or
+  - 3 words (~33%)
+  from a randomly chosen past search term if possible.
+*/
+function recombinedSearchPhrase() {
+    const terms = loadTerms();
+    if (terms.length < 1) return null;
+
+    const N = (Math.random() < 0.67) ? 2 : 3;
+
+    // Try a few times to find a term long enough for a contiguous chunk
+    for (let tries = 0; tries < 12; tries++) {
+        const t = terms[Math.floor(Math.random() * terms.length)];
+        const words = tokenize(t);
+        if (words.length >= N) {
+            const start = Math.floor(Math.random() * (words.length - N + 1));
+            const chunk = words.slice(start, start + N).join(" ").trim();
+            if (chunk) return chunk;
+        }
     }
 
-    function getQuickSearchDomains() {
-        const sb = window.SITEBOOK;
-        if (!sb || !sb.sites) return [];
+    // Fallback: stitch N random words from the overall pool (still only from past terms)
+    const pool = terms.flatMap(tokenize);
+    if (!pool.length) return null;
 
-        const domains = [];
-        for (const [id, site] of Object.entries(sb.sites)) {
-            if (site && site.inQuickSearch && site.domain) domains.push(site.domain);
-        }
-        // de-dup, stable
-        return Array.from(new Set(domains));
+    const out = [];
+    for (let i = 0; i < N; i++) out.push(pool[Math.floor(Math.random() * pool.length)]);
+    return out.join(" ").trim() || null;
+}
+
+/* ---------- quick search ---------- */
+function runQuickSearch() {
+    const term = (document.getElementById("quickTerm").value || "").trim();
+    if (!term) return;
+
+    rememberTerm(term);
+
+    const domains = getQuickSearchDomains();
+    const q = domains.length
+        ? `${term} ${buildSiteClause(domains)}`.trim()
+        : term;
+
+    openInNewTab("https://www.google.com/search?q=" + encodeURIComponent(q));
+}
+
+/* ---------- homepage rendering ---------- */
+function renderHomepageLinks() {
+    const host = document.getElementById("homeLinks");
+    host.innerHTML = "";
+
+    const sb = window.SITEBOOK;
+    if (!sb || !Array.isArray(sb.homeSections) || !sb.sites) {
+        const warn = document.createElement("div");
+        warn.className = "sitebook-warn";
+        warn.textContent = "Site list failed to load (sites.js / window.SITEBOOK missing).";
+        host.appendChild(warn);
+        return;
     }
 
-    function runQuickSearch() {
-        const term = (document.getElementById("quickTerm").value || "").trim();
-        if (!term) return;
+    for (const section of sb.homeSections) {
+        const label = (section && typeof section.label === "string") ? section.label : "";
+        const items = (section && Array.isArray(section.items)) ? section.items : [];
 
-        const domains = getQuickSearchDomains();
-        if (!domains.length) {
-            window.open("https://www.google.com/search?q=" + encodeURIComponent(term), "_blank");
-            return;
+        if (host.childNodes.length) host.appendChild(document.createElement("br"));
+
+        if (label && label !== "(top)") {
+            const head = document.createElement("span");
+            head.className = "subhead";
+            head.textContent = label;
+            host.appendChild(head);
+            host.appendChild(document.createElement("br"));
         }
 
-        const q = `${term} ${buildSiteClause(domains)}`.trim();
-        window.open("https://www.google.com/search?q=" + encodeURIComponent(q), "_blank");
-    }
+        for (const id of items) {
+            const site = sb.sites[id];
+            if (!site) continue;
+            if (site.onHomepage === false) continue;
 
-    function renderHomepageLinks() {
-        const host = document.getElementById("homeLinks");
-        host.innerHTML = "";
-
-        const sb = window.SITEBOOK;
-        if (!sb || !Array.isArray(sb.homeSections) || !sb.sites) {
-            const warn = document.createElement("div");
-            warn.className = "sitebook-warn";
-            warn.textContent = "Site list failed to load (sites.js / window.SITEBOOK missing).";
-            host.appendChild(warn);
-            return;
-        }
-
-        for (const section of sb.homeSections) {
-            const label = (section && typeof section.label === "string") ? section.label : "";
-            const items = (section && Array.isArray(section.items)) ? section.items : [];
-
-            // Spacer between sections (but not before the first output)
-            if (host.childNodes.length) host.appendChild(document.createElement("br"));
-
-            // Heading (skip for "(top)")
-            if (label && label !== "(top)") {
-                const head = document.createElement("span");
-                head.className = "subhead";
-                head.textContent = label;
-                host.appendChild(head);
-                host.appendChild(document.createElement("br"));
-            }
-
-            for (const id of items) {
-                const site = sb.sites[id];
-                if (!site) continue;
-
-                // Respect the "onHomepage" toggle (so you can hide without removing from list)
-                if (site.onHomepage === false) continue;
-
-                const a = document.createElement("a");
-                a.href = site.url || "#";
-                a.textContent = site.label || id;
-                host.appendChild(a);
-                host.appendChild(document.createElement("br"));
-            }
+            const a = document.createElement("a");
+            a.href = site.url || "#";
+            a.textContent = site.label || id;
+            host.appendChild(a);
+            host.appendChild(document.createElement("br"));
         }
     }
+}
 
-    document.getElementById("quickGo").addEventListener("click", runQuickSearch);
-    document.getElementById("quickTerm").addEventListener("keydown", (e) => {
+/* ---------- random link opener ---------- */
+function openRandomHomepageLink() {
+    const links = [...document.querySelectorAll("#homeLinks a[href]")]
+        .map(a => a.href)
+        .filter(href => href && href !== "#" && !href.includes("site-search.html") && !href.includes("index.html"));
+
+    if (!links.length) return;
+    openInNewTab(links[Math.floor(Math.random() * links.length)]);
+}
+
+/* ---------- parallax ---------- */
+const MAX_BG_PERCENT = 90;
+const SPEED = 0.55;
+
+function updateParallax() {
+    const doc = document.documentElement;
+    const scrollTop = window.scrollY || doc.scrollTop || 0;
+    const maxScroll = Math.max(1, doc.scrollHeight - window.innerHeight);
+    const progress = Math.min(1, scrollTop / maxScroll);
+    const pos = Math.min(MAX_BG_PERCENT, progress * MAX_BG_PERCENT * SPEED);
+    document.documentElement.style.setProperty("--bg-pos-y", pos + "%");
+}
+
+/* ---------- init safely AFTER DOM exists ---------- */
+window.addEventListener("DOMContentLoaded", () => {
+    const quickGo = document.getElementById("quickGo");
+    const quickTerm = document.getElementById("quickTerm");
+    const flower = document.getElementById("randomFlower");
+
+    renderHomepageLinks();
+
+    quickGo.addEventListener("click", runQuickSearch);
+    quickTerm.addEventListener("keydown", (e) => {
         if (e.key === "Enter") runQuickSearch();
     });
 
-    // Parallax: scroll background down to a max percent of the image
-    const MAX_BG_PERCENT = 90;
-    const SPEED = 0.55;
+    // Flower: tap = search, long-press = random link
+    let pressTimer = null;
+    let longPressed = false;
+    const LONG_PRESS_MS = 450;
 
-    function updateParallax() {
-        const doc = document.documentElement;
-        const scrollTop = window.scrollY || doc.scrollTop || 0;
-        const maxScroll = Math.max(1, doc.scrollHeight - window.innerHeight);
-        const progress = Math.min(1, scrollTop / maxScroll);
-        const pos = Math.min(MAX_BG_PERCENT, progress * MAX_BG_PERCENT * SPEED);
-        document.documentElement.style.setProperty("--bg-pos-y", pos + "%");
+    function clearPressTimer() {
+        if (pressTimer) {
+            clearTimeout(pressTimer);
+            pressTimer = null;
+        }
     }
 
-    // Render once sites.js has executed
-    renderHomepageLinks();
+    flower.addEventListener("pointerdown", (e) => {
+        longPressed = false;
+        clearPressTimer();
+        // Start long-press timer
+        pressTimer = setTimeout(() => {
+            longPressed = true;
+            openRandomHomepageLink();
+        }, LONG_PRESS_MS);
+    });
+
+    flower.addEventListener("pointerup", (e) => {
+        clearPressTimer();
+        if (longPressed) return; // long press already handled
+
+        const phrase = recombinedSearchPhrase();
+        if (!phrase) return;
+        quickTerm.value = phrase;
+        runQuickSearch(); // auto-search in new tab
+    });
+
+    flower.addEventListener("pointercancel", clearPressTimer);
+    flower.addEventListener("pointerleave", clearPressTimer);
 
     window.addEventListener("scroll", updateParallax, { passive: true });
     window.addEventListener("resize", updateParallax);
     updateParallax();
+});
 </script>
 
 <br>
-<img src="flowergif.gif" alt="flower" class="bottom-gif">
+<img src="flowergif.gif"
+     alt="flower"
+     class="bottom-gif"
+     id="randomFlower"
+     title="tap = strange search • long-press = random link">
 
 </body>
 </html>
