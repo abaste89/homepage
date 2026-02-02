@@ -31,3 +31,13 @@ Long term edits:
 
 *On second thoughts I'm not sure what the point would be: the homepage/search functionalities solve problems, adding raindrop/obsidian to the homepage doesn't really enable you to do anything you couldn't before.
 
+List of sites to add:
+Journals:
+Hotel https://partisanhotel.co.uk/About
+Effects https://effects-journal.com/
+
+Publishers:
+https://tenementpress.bigcartel.com/
+https://peninsulapress.co.uk/
+
+
