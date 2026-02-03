@@ -38,7 +38,8 @@ window.SITEBOOK = {
         "david-lebovitz",
         "the-kitchn",
         "the-guardian",
-        "anarchist-library"
+        "saveur",
+        "brindisa"
       ]
     },
     {
@@ -49,7 +50,8 @@ window.SITEBOOK = {
         "dissent",
         "counterpunch",
         "nlr-sidecar",
-        "the-canary"
+        "the-canary",
+        "anarchist-library"
       ]
     },
     {
@@ -993,6 +995,32 @@ window.SITEBOOK = {
       "defaultAdvanced": false,
       "advancedGroups": [
         "Politics"
+      ],
+      "tags": []
+    },
+    "saveur": {
+      "label": "saveur",
+      "url": "saveur.com",
+      "domain": "saveur.com",
+      "onHomepage": false,
+      "inQuickSearch": false,
+      "inAdvancedSearch": true,
+      "defaultAdvanced": false,
+      "advancedGroups": [
+        "Food"
+      ],
+      "tags": []
+    },
+    "brindisa": {
+      "label": "brindisa",
+      "url": "https://brindisa.com/blogs/spanish-food-recipes",
+      "domain": "brindisa.com/blogs/spanish-food-recipes",
+      "onHomepage": false,
+      "inQuickSearch": false,
+      "inAdvancedSearch": true,
+      "defaultAdvanced": false,
+      "advancedGroups": [
+        "Food"
       ],
       "tags": []
     }
