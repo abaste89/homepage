@@ -29,16 +29,26 @@ window.SITEBOOK = {
         "future-feed",
         "ambient-receiver",
         "emergence",
-        "dis-art"
+        "dis-art",
+        "greatbritishchefs",
+        "greatitalianchefs",
+        "serious-eats",
+        "ottolenghi",
+        "rachel-eats",
+        "david-lebovitz",
+        "the-kitchn",
+        "the-guardian",
+        "anarchist-library"
       ]
     },
     {
       "label": "p o l i t i c s",
       "items": [
-        "damage",
-        "nlr-sidecar",
         "novara",
+        "damage",
         "dissent",
+        "counterpunch",
+        "nlr-sidecar",
         "the-canary"
       ]
     },
@@ -91,7 +101,9 @@ window.SITEBOOK = {
     "Lit/Essay",
     "Ecology",
     "Poetry",
-    "Music"
+    "Music",
+    "Food",
+    "Politics"
   ],
   "sites": {
     "eflux": {
@@ -485,9 +497,11 @@ window.SITEBOOK = {
       "domain": "damagemag.com",
       "onHomepage": true,
       "inQuickSearch": false,
-      "inAdvancedSearch": false,
+      "inAdvancedSearch": true,
       "defaultAdvanced": false,
-      "advancedGroups": [],
+      "advancedGroups": [
+        "Politics"
+      ],
       "tags": []
     },
     "nlr-sidecar": {
@@ -496,9 +510,11 @@ window.SITEBOOK = {
       "domain": "newleftreview.org",
       "onHomepage": true,
       "inQuickSearch": false,
-      "inAdvancedSearch": false,
+      "inAdvancedSearch": true,
       "defaultAdvanced": false,
-      "advancedGroups": [],
+      "advancedGroups": [
+        "Politics"
+      ],
       "tags": []
     },
     "novara": {
@@ -507,9 +523,11 @@ window.SITEBOOK = {
       "domain": "novaramedia.com",
       "onHomepage": true,
       "inQuickSearch": false,
-      "inAdvancedSearch": false,
+      "inAdvancedSearch": true,
       "defaultAdvanced": false,
-      "advancedGroups": [],
+      "advancedGroups": [
+        "Politics"
+      ],
       "tags": []
     },
     "dissent": {
@@ -518,9 +536,11 @@ window.SITEBOOK = {
       "domain": "dissentmagazine.org",
       "onHomepage": true,
       "inQuickSearch": false,
-      "inAdvancedSearch": false,
+      "inAdvancedSearch": true,
       "defaultAdvanced": false,
-      "advancedGroups": [],
+      "advancedGroups": [
+        "Politics"
+      ],
       "tags": []
     },
     "the-canary": {
@@ -529,9 +549,11 @@ window.SITEBOOK = {
       "domain": "thecanary.co",
       "onHomepage": true,
       "inQuickSearch": false,
-      "inAdvancedSearch": false,
+      "inAdvancedSearch": true,
       "defaultAdvanced": false,
-      "advancedGroups": [],
+      "advancedGroups": [
+        "Politics"
+      ],
       "tags": []
     },
     "the-quietus": {
@@ -843,6 +865,136 @@ window.SITEBOOK = {
         "poetry",
         "criticism"
       ]
+    },
+    "greatbritishchefs": {
+      "label": "greatbritishchefs",
+      "url": "greatbritishchefs.com",
+      "domain": "greatbritishchefs.com",
+      "onHomepage": false,
+      "inQuickSearch": false,
+      "inAdvancedSearch": true,
+      "defaultAdvanced": false,
+      "advancedGroups": [
+        "Food"
+      ],
+      "tags": []
+    },
+    "greatitalianchefs": {
+      "label": "greatitalianchefs",
+      "url": "greatitalianchefs.com",
+      "domain": "greatitalianchefs.com",
+      "onHomepage": false,
+      "inQuickSearch": false,
+      "inAdvancedSearch": true,
+      "defaultAdvanced": false,
+      "advancedGroups": [
+        "Food"
+      ],
+      "tags": []
+    },
+    "serious-eats": {
+      "label": "serious-eats",
+      "url": "seriouseats.com",
+      "domain": "seriouseats.com",
+      "onHomepage": false,
+      "inQuickSearch": false,
+      "inAdvancedSearch": true,
+      "defaultAdvanced": false,
+      "advancedGroups": [
+        "Food"
+      ],
+      "tags": []
+    },
+    "ottolenghi": {
+      "label": "ottolenghi",
+      "url": "ottolenghi.co.uk",
+      "domain": "ottolenghi.co.uk",
+      "onHomepage": false,
+      "inQuickSearch": false,
+      "inAdvancedSearch": true,
+      "defaultAdvanced": false,
+      "advancedGroups": [
+        "Food"
+      ],
+      "tags": []
+    },
+    "rachel-eats": {
+      "label": "rachel-eats",
+      "url": "https://racheleats.wordpress.com/",
+      "domain": "racheleats.wordpress.com/",
+      "onHomepage": false,
+      "inQuickSearch": false,
+      "inAdvancedSearch": true,
+      "defaultAdvanced": false,
+      "advancedGroups": [
+        "Food"
+      ],
+      "tags": []
+    },
+    "david-lebovitz": {
+      "label": "david-lebovitz",
+      "url": "https://www.davidlebovitz.com/",
+      "domain": "www.davidlebovitz.com/",
+      "onHomepage": false,
+      "inQuickSearch": false,
+      "inAdvancedSearch": true,
+      "defaultAdvanced": false,
+      "advancedGroups": [
+        "Food"
+      ],
+      "tags": []
+    },
+    "the-kitchn": {
+      "label": "the-kitchn",
+      "url": "thekitchn.com",
+      "domain": "thekitchn.com",
+      "onHomepage": false,
+      "inQuickSearch": false,
+      "inAdvancedSearch": true,
+      "defaultAdvanced": false,
+      "advancedGroups": [
+        "Food"
+      ],
+      "tags": []
+    },
+    "the-guardian": {
+      "label": "the-guardian",
+      "url": "theguardian.com",
+      "domain": "theguardian.com",
+      "onHomepage": false,
+      "inQuickSearch": false,
+      "inAdvancedSearch": true,
+      "defaultAdvanced": false,
+      "advancedGroups": [
+        "Food"
+      ],
+      "tags": []
+    },
+    "counterpunch": {
+      "label": "counterpunch",
+      "url": "https://www.counterpunch.org/",
+      "domain": "counterpunch.org/",
+      "onHomepage": true,
+      "inQuickSearch": false,
+      "inAdvancedSearch": true,
+      "defaultAdvanced": false,
+      "advancedGroups": [
+        "Politics"
+      ],
+      "tags": []
+    },
+    "anarchist-library": {
+      "label": "anarchist-library",
+      "url": "https://theanarchistlibrary.org/special/index",
+      "domain": "theanarchistlibrary.org/special/index",
+      "onHomepage": true,
+      "inQuickSearch": false,
+      "inAdvancedSearch": true,
+      "defaultAdvanced": false,
+      "advancedGroups": [
+        "Politics"
+      ],
+      "tags": []
     }
   }
 };
