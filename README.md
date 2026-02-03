@@ -21,6 +21,7 @@ Next edits and additions:
 4. Add a "food" group to the advanced search only, to enable searching ingredients and ideas across multiple trusted recipe sites.
 5. Add more libraries inc Ubu, maybe the geocities gif library/cameron's place for fun.
 6. Add a section on defunct pdf publishers (gauss, troll thread, lost rocks).
+7. Add a drop-down "group" menu on the advanced search, to supplement the tags (it's more useful than tags).
 
 Long term edits:
 1. Add Raindrop integration?*
