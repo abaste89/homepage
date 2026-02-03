@@ -22,6 +22,7 @@ Next edits and additions:
 5. Add more libraries inc Ubu, maybe the geocities gif library/cameron's place for fun.
 6. Add a section on defunct pdf publishers (gauss, troll thread, lost rocks).
 7. Add a drop-down "group" menu on the advanced search, to supplement the tags (it's more useful than tags).
+8. Double check the randomizer is doing its job properly: it seems to favour certain searches and it'd be great if it never repeated multi-word searches - it's quite boring for it just to repeat old searches you've made.
 
 Long term edits:
 1. Add Raindrop integration?*
